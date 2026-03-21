@@ -1,0 +1,138 @@
+/* TickerAdda Responsive Fixes and Enhancements */
+
+/* Mobile Header Adjustments */
+@media (max-width: 768px) {
+    .site-header {
+        position: fixed;
+    }
+    
+    .nav-content {
+        padding: 5px 15px;
+    }
+
+    .logo img {
+        height: 38px;
+    }
+
+    .nav-links {
+        top: 100%;
+        background: rgba(10, 10, 15, 0.98);
+        padding: 30px 20px;
+        gap: 15px;
+    }
+
+    .nav-link {
+        font-size: 1.1rem;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        width: 100%;
+    }
+
+    .hero {
+        padding-top: 120px;
+        text-align: center;
+    }
+
+    .hero-title {
+        font-size: 2.5rem !important;
+    }
+
+    .search-container {
+        margin: 20px 10px !important;
+    }
+
+    #homeSearchInput {
+        padding: 15px 20px !important;
+        font-size: 1rem !important;
+    }
+
+    #homeSearchBtn {
+        position: static !important;
+        width: 100%;
+        margin-top: 10px;
+        padding: 15px !important;
+    }
+}
+
+/* KYC Banner Behavior on Scroll */
+.site-header.scrolled .kyc-banner {
+    background: rgba(59, 130, 246, 0.9); /* More transparent but visible */
+}
+
+.site-header.scrolled {
+    transform: translateY(0);
+}
+
+/* Grid adjustments */
+@media (max-width: 1024px) {
+    .grid-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .grid-4, .grid-3, .grid-2 {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .section-header .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Fix for Seller Dashboard Table on Mobile */
+@media (max-width: 768px) {
+    #listingsTable tr {
+        display: block;
+        background: var(--card-bg);
+        margin-bottom: 20px;
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid var(--glass-border);
+    }
+    
+    #listingsTable td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0 !important;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        text-align: right;
+    }
+    
+    #listingsTable td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--text-gray);
+        text-align: left;
+        font-size: 0.8rem;
+    }
+
+    #listingsTable td:last-child {
+        border-bottom: none;
+    }
+    
+    .table-container thead {
+        display: none;
+    }
+
+    /* KYC Banner mobile fix */
+    .kyc-banner {
+        padding: 15px 10px;
+    }
+    .banner-content {
+        font-size: 0.8rem;
+    }
+}
+
+/* Header Spacing Fix */
+.has-kyc-banner .navbar {
+    margin-top: 0; /* Already inside site-header stack */
+}

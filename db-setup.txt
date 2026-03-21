@@ -1,0 +1,52 @@
+<?php
+/**
+ * Database-Level Setup for TickerAdda Movies & Sports
+ * This script directly creates pages in the database and imports movies
+ * 
+ * Run this if setup-complete.php doesn't work
+ */
+
+// Since we can't load wp-load directly, we'll create SQL statements
+// and a PHP script that can be run independently
+
+$db_commands = array();
+
+// Create Sports Page
+$db_commands[] = "
+-- Create Sports Page
+INSERT IGNORE INTO {PREFIX}posts 
+(post_author, post_date, post_date_gmt, post_content, post_title, post_excerpt, post_status, comment_status, ping_status, post_password, post_name, to_ping, pinged, post_modified, post_modified_gmt, post_content_filtered, post_parent, guid, menu_order, post_type, post_mime_type, comment_count) 
+VALUES 
+(1, NOW(), NOW(), 'Browse and buy verified sports event tickets from trusted sellers.', 'Sports', '', 'publish', 'closed', 'closed', '', 'sports', '', '', NOW(), NOW(), '', 0, 'http://tickeradda.in/sports/', 0, 'page', '', 0);
+
+-- Get the inserted post ID and update to page-sports.php template
+SET @sports_post_id = LAST_INSERT_ID();
+INSERT IGNORE INTO {PREFIX}postmeta (post_id, meta_key, meta_value) 
+VALUES (@sports_post_id, '_wp_page_template', 'page-sports.php');
+";
+
+// Create Movies Page  
+$db_commands[] = "
+-- Create Movies Page
+INSERT IGNORE INTO {PREFIX}posts 
+(post_author, post_date, post_date_gmt, post_content, post_title, post_excerpt, post_status, comment_status, ping_status, post_password, post_name, to_ping, pinged, post_modified, post_modified_gmt, post_content_filtered, post_parent, guid, menu_order, post_type, post_mime_type, comment_count) 
+VALUES 
+(1, NOW(), NOW(), 'Browse and buy verified movie tickets from trusted sellers.', 'Movies', '', 'publish', 'closed', 'closed', '', 'movies', '', '', NOW(), NOW(), '', 0, 'http://tickeradda.in/movies/', 0, 'page', '', 0);
+
+-- Get the inserted post ID and update to page-movies.php template
+SET @movies_post_id = LAST_INSERT_ID();
+INSERT IGNORE INTO {PREFIX}postmeta (post_id, meta_key, meta_value) 
+VALUES (@movies_post_id, '_wp_page_template', 'page-movies.php');
+";
+
+echo "Database Setup Commands Generated\n";
+echo "Replace {PREFIX} with your WordPress table prefix (usually wp_)\n";
+echo "Then run these SQL commands in your database:\n\n";
+foreach ( $db_commands as $cmd ) {
+    echo $cmd . "\n\n";
+}
+echo "\nOr use the WordPress admin dashboard:\n";
+echo "1. Go to Pages → Add New\n";
+echo "2. Title: Sports, Slug: sports, Template: page-sports.php\n";
+echo "3. Publish\n";
+echo "4. Repeat for Movies\n";
