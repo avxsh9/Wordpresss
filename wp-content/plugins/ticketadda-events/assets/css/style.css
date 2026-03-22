@@ -1,0 +1,170 @@
+/* TicketAdda Events Marketplace - Premium Styles */
+:root {
+    --tae-primary: #1a73e8; /* Google Blue */
+    --tae-secondary: #004ba0;
+    --tae-accent: #ffcc00;
+    --tae-dark: #202124;
+    --tae-light: #f8f9fa;
+    --tae-radius: 12px;
+    --tae-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.tae-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+    padding: 20px 0;
+}
+
+.tae-card {
+    background: #fff;
+    border-radius: var(--tae-radius);
+    overflow: hidden;
+    box-shadow: var(--tae-shadow);
+    transition: transform 0.3s ease;
+    border: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+}
+
+.tae-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+.tae-card-image {
+    position: relative;
+    height: 220px;
+    overflow: hidden;
+}
+
+.tae-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.tae-type-badge {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    padding: 5px 15px;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.tae-card.movie .tae-type-badge { background: #e50914; }
+.tae-card.sports .tae-type-badge { background: #004ba0; }
+
+.tae-card-body {
+    padding: 20px;
+    flex-grow: 1;
+}
+
+.tae-card-title {
+    margin: 0 0 15px 0;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--tae-dark);
+}
+
+.tae-card-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 10px 0;
+    color: #5f6368;
+    font-size: 0.95rem;
+}
+
+.tae-card-info .dashicons {
+    color: var(--tae-primary);
+    font-size: 18px;
+}
+
+.tae-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #f1f3f4;
+}
+
+.tae-card-price {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--tae-dark);
+}
+
+.tae-btn {
+    padding: 10px 20px;
+    background: var(--tae-primary);
+    color: #fff;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 700;
+    transition: background 0.2s;
+}
+
+.tae-btn:hover { background: var(--tae-secondary); color: #fff; }
+
+/* Dashboard & Forms */
+.tae-form-wrapper, .tae-dashboard-wrapper {
+    background: #fff;
+    padding: 40px;
+    border-radius: var(--tae-radius);
+    box-shadow: var(--tae-shadow);
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.tae-form-group { margin-bottom: 20px; }
+.tae-form-group label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 0.9rem; }
+.tae-form-group input, .tae-form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.tae-btn-submit {
+    width: 100%;
+    padding: 18px;
+    background: var(--tae-primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.tae-dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.tae-dashboard-table th, .tae-dashboard-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.tae-status-badge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.tae-status-badge.publish { background: #e6f4ea; color: #1e8e3e; }
+.tae-status-badge.pending { background: #fef7e0; color: #b06000; }
