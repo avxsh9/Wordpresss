@@ -1,0 +1,196 @@
+/* Movie Ticket Marketplace - Premium Styles */
+:root {
+    --mtm-primary: #e50914; /* Netflix Red */
+    --mtm-secondary: #221f1f;
+    --mtm-accent: #f5f5f1;
+    --mtm-glass: rgba(255, 255, 255, 0.1);
+    --mtm-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    --mtm-radius: 12px;
+}
+
+.mtm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+    padding: 20px 0;
+}
+
+.mtm-card {
+    background: #fff;
+    border-radius: var(--mtm-radius);
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+}
+
+.mtm-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+}
+
+.mtm-card-image {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.mtm-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.mtm-card:hover .mtm-card-image img {
+    transform: scale(1.1);
+}
+
+.mtm-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--mtm-secondary);
+}
+
+.mtm-badge.available { background: #2ecc71; }
+.mtm-badge.sold { background: #e74c3c; }
+.mtm-badge.expired { background: #95a5a6; }
+
+.mtm-card-content {
+    padding: 20px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.mtm-card-title {
+    margin: 0 0 12px 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.mtm-card-location, .mtm-card-datetime {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 8px 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.mtm-card-location .dashicons, .mtm-card-datetime .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--mtm-primary);
+}
+
+.mtm-card-footer {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.mtm-price {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1a1a1a;
+}
+
+.mtm-btn {
+    background: var(--mtm-primary);
+    color: #fff;
+    padding: 8px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.mtm-btn:hover {
+    background: #c10712;
+    color: #fff;
+}
+
+/* Sell Form Styles */
+.mtm-sell-form-wrapper {
+    background: #f9f9f9;
+    padding: 40px;
+    border-radius: var(--mtm-radius);
+    max-width: 800px;
+    margin: 0 auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.mtm-form h2 {
+    margin-bottom: 30px;
+    text-align: center;
+    color: #1a1a1a;
+}
+
+.mtm-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.mtm-form-group {
+    margin-bottom: 20px;
+}
+
+.mtm-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+.mtm-form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    transition: border-color 0.2s;
+}
+
+.mtm-form-group input:focus {
+    border-color: var(--mtm-primary);
+    outline: none;
+}
+
+.mtm-btn-submit {
+    width: 100%;
+    padding: 15px;
+    background: var(--mtm-primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.2s;
+}
+
+.mtm-btn-submit:hover {
+    background: #c10712;
+}
+
+#mtm-form-msg {
+    margin-top: 20px;
+    text-align: center;
+    font-weight: 600;
+}
