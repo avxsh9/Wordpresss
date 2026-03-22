@@ -24,13 +24,19 @@
         </thead>
         <tbody>
             <?php if ( $query->have_posts() ) : while ( $query->have_posts() ) : $query->the_post(); 
-                $price = get_post_meta( get_the_ID(), 'uem_price', true );
-                $seats = get_post_meta( get_the_ID(), 'uem_seats', true );
-                $status = get_post_meta( get_the_ID(), 'uem_status', true );
-                $cat = get_the_terms( get_the_ID(), 'event_category' )[0]->name;
+                $post_id = get_the_ID();
+                $master_id = get_post_meta( $post_id, 'event_id', true );
+                $master = get_post( $master_id );
+                $title = $master ? $master->post_title : get_the_title();
+                
+                $price = get_post_meta( $post_id, 'uem_price', true );
+                $seats = get_post_meta( $post_id, 'uem_seats', true );
+                $status = get_post_meta( $post_id, 'uem_status', true );
+                $cat_terms = get_the_terms( $post_id, 'event_category' );
+                $cat = ! empty($cat_terms) ? $cat_terms[0]->name : 'Event';
                 ?>
                 <tr>
-                    <td><strong><?php the_title(); ?></strong></td>
+                    <td><strong><?php echo esc_html( $title ); ?></strong></td>
                     <td><?php echo esc_html( $cat ); ?></td>
                     <td>₹<?php echo esc_html( $price ); ?></td>
                     <td><?php echo esc_html( $seats ); ?></td>

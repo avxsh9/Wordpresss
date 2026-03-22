@@ -12,8 +12,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Fetch both 'theatre' and 'other' categories for this page
     try {
         const [theatreRes, otherRes] = await Promise.all([
-            fetch(`${TA.restUrl}/events?category=theatre`),
-            fetch(`${TA.restUrl}/events?category=other`)
+            fetch(`${TA.restUrl}/events-list?category=theatre`),
+            fetch(`${TA.restUrl}/events-list?category=other`)
         ]);
         const theatreShows = await theatreRes.json();
         const otherShows   = await otherRes.json();
@@ -129,9 +129,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 ${event.time ? `<span><i class="far fa-clock"></i> ${event.time}</span>` : ''}
                             </div>
                         </div>
-                    </div>
-                    <div class="event-card-footer">
-                        <button class="btn-view">Book Now <i class="fas fa-arrow-right"></i></button>
+                        <div class="event-card-price" style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <div class="price-value" style="font-size: 1.4rem; font-weight: 800; color: #fff;">
+                                ${event.price > 0 ? `${event.price.toLocaleString()}` : ''}
+                            </div>
+                            <div class="card-actions">
+                                ${event.ticketCount > 0 
+                                    ? `<button class="btn-buy" onclick="event.stopPropagation(); window.location.href='${event.url}'" style="background: #2563eb; color: #fff; border: none; padding: 10px 24px; border-radius: 12px; font-weight: 700; cursor: pointer;">Book Tickets</button>`
+                                    : `<button class="btn-sell" onclick="event.stopPropagation(); window.location.href='${TA.homeUrl}sell-ticket/?event_id=${event.id}'" style="background: rgba(255,255,255,0.05); color: #888; border: 1px solid rgba(255,255,255,0.1); padding: 10px 24px; border-radius: 12px; font-weight: 600; cursor: pointer;">Sell Tickets</button>`
+                                }
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;

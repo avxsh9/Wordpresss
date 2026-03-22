@@ -93,7 +93,7 @@ class TA_Events {
             'show_in_rest'      => true,
         );
 
-        register_taxonomy( 'event_cat', array( 'events' ), $args );
+        register_taxonomy( 'event_cat', array( 'events', 'movies', 'sports_events' ), $args );
         
         // Register default terms if they don't exist
         $this->ensure_default_categories();
@@ -126,25 +126,54 @@ class TA_Events {
         $date     = get_post_meta( $post->ID, 'event_date', true );
         $time     = get_post_meta( $post->ID, 'event_time', true );
         $location = get_post_meta( $post->ID, 'event_location', true );
+        $poster   = get_post_meta( $post->ID, 'poster_url', true );
+        $rating   = get_post_meta( $post->ID, 'movie_rating', true );
+        $cert     = get_post_meta( $post->ID, 'movie_cert', true );
+        $lang     = get_post_meta( $post->ID, 'language', true );
+        $teams    = get_post_meta( $post->ID, 'teams', true );
+
         wp_nonce_field( 'ta_event_meta_save', 'ta_event_meta_nonce' );
         ?>
-        <div style="padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #ccd0d4; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div style="padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #ccd0d4;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                <p style="margin:0;">
-                    <label for="ta_event_date" style="font-weight:600;display:block;margin-bottom:8px; color: #1d2327;">Event Date:</label>
-                    <input type="date" id="ta_event_date" name="ta_event_date" value="<?php echo esc_attr( $date ); ?>" style="width:100%; height: 35px; border-radius: 4px; border: 1px solid #8c8f94;">
+                <p>
+                    <label style="font-weight:600;display:block;margin-bottom:8px;">Event Date:</label>
+                    <input type="date" name="ta_event_date" value="<?php echo esc_attr( $date ); ?>" style="width:100%;">
                 </p>
-                <p style="margin:0;">
-                    <label for="ta_event_time" style="font-weight:600;display:block;margin-bottom:8px; color: #1d2327;">Event Time:</label>
-                    <input type="time" id="ta_event_time" name="ta_event_time" value="<?php echo esc_attr( $time ); ?>" style="width:100%; height: 35px; border-radius: 4px; border: 1px solid #8c8f94;">
+                <p>
+                    <label style="font-weight:600;display:block;margin-bottom:8px;">Event Time:</label>
+                    <input type="time" name="ta_event_time" value="<?php echo esc_attr( $time ); ?>" style="width:100%;">
                 </p>
             </div>
-            <p style="margin:0;">
-                <label for="ta_event_location" style="font-weight:600;display:block;margin-bottom:8px; color: #1d2327;">Venue / Location:</label>
-                <input type="text" id="ta_event_location" name="ta_event_location" value="<?php echo esc_attr( $location ); ?>" placeholder="e.g. Jio World Garden, Mumbai" style="width:100%; height: 35px; border-radius: 4px; border: 1px solid #8c8f94;">
+            <p>
+                <label style="font-weight:600;display:block;margin-bottom:8px;">Venue / Location:</label>
+                <input type="text" name="ta_event_location" value="<?php echo esc_attr( $location ); ?>" style="width:100%;" placeholder="e.g. Jio World Garden, Mumbai">
             </p>
-            <p style="margin-top:20px; font-size: 13px; color: #646970; border-top: 1px solid #f0f0f1; padding-top: 15px;">
-                <i class="dashicons dashicons-info" style="vertical-align: middle; font-size: 18px;"></i> Tip: High-quality event images make your listings stand out.
+            <p>
+                <label style="font-weight:600;display:block;margin-bottom:8px;">Poster URL (Direct Link):</label>
+                <input type="url" name="ta_poster_url" value="<?php echo esc_attr( $poster ); ?>" style="width:100%;" placeholder="https://...">
+            </p>
+            
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+            <h4 style="margin-top:0;">Advanced Details (Movies / Sports)</h4>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                <p>
+                    <label>Rating (e.g. 8.5/10):</label>
+                    <input type="text" name="ta_movie_rating" value="<?php echo esc_attr( $rating ); ?>" style="width:100%;">
+                </p>
+                <p>
+                    <label>Certificate (UA/A):</label>
+                    <input type="text" name="ta_movie_cert" value="<?php echo esc_attr( $cert ); ?>" style="width:100%;">
+                </p>
+                <p>
+                    <label>Language:</label>
+                    <input type="text" name="ta_language" value="<?php echo esc_attr( $lang ); ?>" style="width:100%;">
+                </p>
+            </div>
+            <p>
+                <label>Teams (For Sports):</label>
+                <input type="text" name="ta_teams" value="<?php echo esc_attr( $teams ); ?>" style="width:100%;" placeholder="Team A vs Team B">
             </p>
         </div>
         <?php
@@ -163,6 +192,21 @@ class TA_Events {
         }
         if ( isset( $_POST['ta_event_location'] ) ) {
             update_post_meta( $post_id, 'event_location', sanitize_text_field( $_POST['ta_event_location'] ) );
+        }
+        if ( isset( $_POST['ta_poster_url'] ) ) {
+            update_post_meta( $post_id, 'poster_url', esc_url_raw( $_POST['ta_poster_url'] ) );
+        }
+        if ( isset( $_POST['ta_movie_rating'] ) ) {
+            update_post_meta( $post_id, 'movie_rating', sanitize_text_field( $_POST['ta_movie_rating'] ) );
+        }
+        if ( isset( $_POST['ta_movie_cert'] ) ) {
+            update_post_meta( $post_id, 'movie_cert', sanitize_text_field( $_POST['ta_movie_cert'] ) );
+        }
+        if ( isset( $_POST['ta_language'] ) ) {
+            update_post_meta( $post_id, 'language', sanitize_text_field( $_POST['ta_language'] ) );
+        }
+        if ( isset( $_POST['ta_teams'] ) ) {
+            update_post_meta( $post_id, 'teams', sanitize_text_field( $_POST['ta_teams'] ) );
         }
     }
 
@@ -217,19 +261,19 @@ class TA_Events {
      * REST API Routes
      */
     public function register_routes() {
-        register_rest_route( TA_REST_NS, '/events', array(
+        register_rest_route( TA_REST_NS, '/events-list', array(
             'methods'             => 'GET',
             'callback'            => array( $this, 'get_events' ),
             'permission_callback' => '__return_true',
         ) );
 
-        register_rest_route( TA_REST_NS, '/events/(?P<id>\d+)', array(
+        register_rest_route( TA_REST_NS, '/events-list/(?P<id>\d+)', array(
             'methods'             => 'GET',
             'callback'            => array( $this, 'get_event' ),
             'permission_callback' => '__return_true',
         ) );
 
-        register_rest_route( TA_REST_NS, '/events/(?P<id>\d+)/tickets', array(
+        register_rest_route( TA_REST_NS, '/events-list/(?P<id>\d+)/tickets', array(
             'methods'             => 'GET',
             'callback'            => array( $this, 'get_event_tickets' ),
             'permission_callback' => '__return_true',
@@ -243,7 +287,7 @@ class TA_Events {
         $per_page = $request->get_param('per_page') ? (int) $request->get_param('per_page') : 500;
 
         $args = array(
-            'post_type'      => 'events',
+            'post_type'      => array( 'events', 'movies', 'sports_events' ),
             'posts_per_page' => $per_page,
             'post_status'    => 'publish',
             'orderby'        => 'meta_value',
@@ -272,8 +316,6 @@ class TA_Events {
 
         // Logic for trending/popular can be based on most tickets or custom meta
         $query = new WP_Query($args);
-        $events = array();
-
         if ($query->have_posts()) {
             while ($query->have_posts()) {
                 $query->the_post();
@@ -282,71 +324,85 @@ class TA_Events {
         }
         wp_reset_postdata();
 
-        // Tell LiteSpeed Cache not to cache REST API responses for events
-        do_action( 'litespeed_tag_add', 'ta_events_nostore' );
-        do_action( 'litespeed_control_set_nocache', 'events-api' );
-
         return rest_ensure_response($events);
     }
 
-    public function get_event($request) {
+    public function get_event( $request ) {
         $id = $request['id'];
         $post = get_post($id);
-        if (!$post || $post->post_type !== 'events') {
+        if (!$post || !in_array($post->post_type, array('events', 'movies', 'sports_events'))) {
             return new WP_Error('no_event', 'Event not found', array('status' => 404));
         }
         return rest_ensure_response($this->format_event($post));
     }
 
-    public function get_event_tickets($request) {
+    public function get_event_tickets( $request ) {
         $id = $request['id'];
         $tickets_class = new TA_Tickets();
-        
-        // We need to filter tickets by event_id. 
-        // Assuming we'll update TA_Tickets to support event_id filter.
         return $tickets_class->get_approved_tickets($request, $id);
     }
 
-    private function format_event($post) {
-        $thumbnail_id = get_post_thumbnail_id($post->ID);
-        $image = $thumbnail_id ? wp_get_attachment_image_url($thumbnail_id, 'large') : $this->get_placeholder($post->ID);
-        
-        $categories = wp_get_post_terms($post->ID, 'event_cat', array('fields' => 'slugs'));
-        $date = get_post_meta($post->ID, 'event_date', true);
-        $category = !empty($categories) ? $categories[0] : 'other';
-        
-        $response = array(
-            'id'          => $post->ID,
-            'name'        => $post->post_title,
-            'date'        => $date ?: '',
-            'time'        => get_post_meta($post->ID, 'event_time', true) ?: '',
-            'location'    => get_post_meta($post->ID, 'event_location', true) ?: 'Venue TBD',
-            'image'       => $image,
-            'description' => $post->post_content,
-            'category'    => $category,
-            'url'         => get_permalink($post->ID),
-            'ticketCount' => $this->get_ticket_count($post->ID)
-        );
-        
-        // Add movie-specific metadata if this is a movie
-        if ($category === 'movies') {
-            $response['movieRating']  = get_post_meta($post->ID, 'movie_rating', true) ?: '8.0/10';
-            $response['movieCert']    = get_post_meta($post->ID, 'movie_certificate', true) ?: 'UA';
-            $response['movieLanguage'] = get_post_meta($post->ID, 'movie_language', true) ?: 'Hindi';
-            $response['movieVotes']   = get_post_meta($post->ID, 'movie_votes', true) ?: 'New';
+    public function format_event($post) {
+        if (!$post) return array();
+        $post_id = $post->ID;
+
+        // Poster / Thumbnail
+        $thumbnail = get_the_post_thumbnail_url($post_id, 'large');
+        if (!$thumbnail) {
+            // Fallbacks for specific types
+            if ($post->post_type === 'movies') {
+                $thumbnail = get_post_meta($post_id, 'poster_url', true);
+            } elseif ($post->post_type === 'sports_events') {
+                $thumbnail = get_post_meta($post_id, 'match_poster', true);
+            }
         }
-        
-        return $response;
-    }
+        if (!$thumbnail) {
+            $thumbnail = 'https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=800&q=80';
+        }
 
-    private function get_ticket_count($event_id) {
+        // Pricing and Tickets
         global $wpdb;
-        $table = TA_Database::tickets_table();
-        return (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE event_id = %d AND status = 'approved'", $event_id));
-    }
+        $table_name = $wpdb->prefix . 'ta_tickets';
+        
+        $min_price = $wpdb->get_var($wpdb->prepare(
+            "SELECT MIN(price) FROM $table_name WHERE event_id = %d AND status IN ('approved', 'available')",
+            $post_id
+        )) ?: 0;
 
-    private function get_placeholder($post_id) {
-        // Simple logic based on category or random high quality image
-        return 'https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=800&q=80';
+        $ticket_count = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $table_name WHERE event_id = %d AND status IN ('approved', 'available')",
+            $post_id
+        )) ?: 0;
+
+        // Category Name
+        $cats = get_the_terms($post_id, 'event_cat');
+        $category_name = !empty($cats) ? $cats[0]->name : 'Event';
+        $category_slug = !empty($cats) ? $cats[0]->slug : 'event';
+
+        $data = array(
+            'id'          => $post_id,
+            'name'        => get_the_title($post_id),
+            'url'         => get_permalink($post_id),
+            'image'       => $thumbnail,
+            'location'    => get_post_meta($post_id, 'venue', true) ?: get_post_meta($post_id, 'location', true) ?: 'Venue TBD',
+            'date'        => get_post_meta($post_id, 'date', true) ?: get_post_meta($post_id, 'event_date', true) ?: '',
+            'time'        => get_post_meta($post_id, 'time', true) ?: get_post_meta($post_id, 'event_time', true) ?: '',
+            'price'       => (float) $min_price,
+            'ticketCount' => $ticket_count,
+            'category'    => $category_name, // Fixed to use actual name
+            'category_slug' => $category_slug,
+            'post_type'    => $post->post_type,
+            'all_meta'    => get_post_meta($post_id),
+        );
+
+        // Add extra fields for specialized views
+        if ($post->post_type === 'movies') {
+            $data['movieRating'] = get_post_meta($post_id, 'imdb_rating', true) ?: get_post_meta($post_id, 'rating', true) ?: '';
+        }
+        if ($post->post_type === 'sports_events') {
+            $data['teams'] = get_post_meta($post_id, 'teams', true) ?: '';
+        }
+
+        return $data;
     }
 }

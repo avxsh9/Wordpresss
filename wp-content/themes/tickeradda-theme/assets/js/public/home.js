@@ -7,109 +7,87 @@ document.addEventListener('DOMContentLoaded', async () => {
     const moreGrid       = document.getElementById('homeMoreEventsGrid');
     const sellersGrid    = document.getElementById('featuredSellersGrid');
 
-    // Pills
     const trendingPills = document.querySelectorAll('.hero-categories .category-pill');
     const sportsPills   = document.querySelectorAll('.sports-section .category-pill-small');
 
     const searchInput = document.getElementById('homeSearchInput');
     const searchBtn   = document.getElementById('homeSearchBtn');
 
-    // ── 2. Parallel fetches ───────────────────────────────────────────
+    let allEventsCached = [];
+
+    // ── 2. Unified Single Fetch ──────────────────────────────────────────
     try {
-        const customUrl = TA.restUrl.replace('tickeradda/v2', 'custom/v1');
-        const [allRes, sportsRes, moviesRes, theatreRes, sellersRes] = await Promise.all([
-            fetch(`${TA.restUrl}/events`),
-            fetch(`${customUrl}/sports`),
-            fetch(`${customUrl}/movies`),
-            fetch(`${TA.restUrl}/events?category=theatre`),
-            fetch(`${TA.restUrl}/users/featured`)
+        console.log('TickerAdda Home: Starting fetches...');
+        
+        const fetchJSON = async (url) => {
+            try {
+                const res = await fetch(url);
+                if (!res.ok) {
+                    console.warn(`Fetch to ${url} returned status ${res.status}`);
+                    return [];
+                }
+                const text = await res.text();
+                if (!text || text.trim() === '') {
+                    console.warn(`Fetch to ${url} returned empty body`);
+                    return [];
+                }
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.error(`JSON parse error for ${url}:`, e, "Content:", text.substring(0, 100));
+                    return [];
+                }
+            } catch (err) {
+                console.error(`Fetch error for ${url}:`, err);
+                return [];
+            }
+        };
+
+        const [events, sellers] = await Promise.all([
+            fetchJSON(`${TA.restUrl}/events-list?per_page=100`),
+            fetchJSON(`${TA.restUrl}/users/featured`)
         ]);
 
-        const allEvents    = await allRes.json();
-        const sportsEventsRaw = await sportsRes.json();
-        const moviesEventsRaw = await moviesRes.json();
-        const theatreEvents= await theatreRes.json();
-        
-        const sportsEvents = Array.isArray(sportsEventsRaw) ? sportsEventsRaw.map(m => ({
-            name: m.match_name || m.title,
-            image: m.match_poster || 'https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=800&q=80',
-            location: m.venue || 'Multiple Venues',
-            date: m.date,
-            time: m.time,
-            url: m.url,
-            category: 'SPORTS',
-            ticketCount: m.quantity || 0
-        })) : [];
+        allEventsCached = Array.isArray(events) ? events : [];
+        const featuredSellers = Array.isArray(sellers) ? sellers : [];
 
-        const moviesEvents = Array.isArray(moviesEventsRaw) ? moviesEventsRaw.map(m => ({
-            name: m.movie_name || m.title,
-            image: m.poster_url || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&h=750&q=80',
-            location: m.venue || 'Multiple Cinemas',
-            date: m.date,
-            time: m.time,
-            url: m.url,
-            category: 'MOVIE',
-            ticketCount: m.quantity || 0
-        })) : [];
-        const featuredSellers = await sellersRes.json();
+        console.log(`TickerAdda Home: Loaded ${allEventsCached.length} events, ${featuredSellers.length} sellers.`);
 
-        // ── 3. Initial render (4 items max per home section) ─────────
-        renderEventGrid(trendingGrid, allEvents.slice(0, 8));
-        renderEventGrid(sportsGrid,   sportsEvents.slice(0, 4));
-        renderEventGrid(moviesGrid,   moviesEvents.slice(0, 4));
-        renderEventGrid(theatreGrid,  theatreEvents.slice(0, 4));
-
-        // "More Events" = everything not in sports / movies / theatre
-        const moreEvents = allEvents.filter(
-            e => !['sports', 'movies', 'theatre'].includes((e.category || '').toLowerCase())
-        );
-        renderEventGrid(moreGrid, moreEvents.slice(0, 4));
-
+        // ── 3. Initial Distribution & Render ───────────────────────────
+        distributeAndRender();
         renderSellersGrid(sellersGrid, featuredSellers);
 
-        // ── 4. Trending section pills ─────────────────────────────────
+        // ── 4. Reactive Trending section pills ─────────────────────────
         trendingPills.forEach(pill => {
-            pill.addEventListener('click', async () => {
+            pill.addEventListener('click', () => {
                 trendingPills.forEach(p => p.classList.remove('active'));
                 pill.classList.add('active');
                 const cat = pill.getAttribute('data-category');
-                trendingGrid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--text-gray);">Filtering...</p>';
-                try {
-                    const url = cat === 'all'
-                        ? `${TA.restUrl}/events`
-                        : `${TA.restUrl}/events?category=${cat}`;
-                    const res = await fetch(url);
-                    const events = await res.json();
-                    renderEventGrid(trendingGrid, events.slice(0, 8));
-                } catch (e) { console.error('Trending filter error:', e); }
+                
+                const filtered = cat === 'all' 
+                    ? allEventsCached 
+                    : allEventsCached.filter(e => e.category_slug === cat || e.category === cat);
+                
+                renderEventGrid(trendingGrid, filtered.slice(0, 8));
             });
         });
 
-        // ── 5. Sports sub-category pills ──────────────────────────────
+        // ── 5. Reactive Sports sub-category pills ──────────────────────
         sportsPills.forEach(pill => {
-            pill.addEventListener('click', async () => {
+            pill.addEventListener('click', () => {
                 sportsPills.forEach(p => p.classList.remove('active'));
                 pill.classList.add('active');
                 const sub = pill.getAttribute('data-sports-category');
-                sportsGrid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--text-gray);">Filtering sports...</p>';
-                try {
-                    const customUrl = TA.restUrl.replace('tickeradda/v2', 'custom/v1');
-                    let url = `${customUrl}/sports`;
-                    if (sub !== 'all') url += `?s=${encodeURIComponent(sub)}`;
-                    const res = await fetch(url);
-                    const raw = await res.json();
-                    const filtered = Array.isArray(raw) ? raw.map(m => ({
-                        name: m.match_name || m.title,
-                        image: m.match_poster || 'https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=800&q=80',
-                        location: m.venue || 'Multiple Venues',
-                        date: m.date,
-                        time: m.time,
-                        url: m.url,
-                        category: 'SPORTS',
-                        ticketCount: m.quantity || 0
-                    })) : [];
-                    renderEventGrid(sportsGrid, filtered.slice(0, 4));
-                } catch (e) { console.error('Sports filter error:', e); }
+                
+                const sportsOnly = allEventsCached.filter(e => e.category_slug === 'sports');
+                const filtered = sub === 'all' 
+                    ? sportsOnly 
+                    : sportsOnly.filter(e => {
+                        const combined = (e.name + (e.teams?' '+e.teams:'')).toLowerCase();
+                        return combined.includes(sub.toLowerCase());
+                    });
+                
+                renderEventGrid(sportsGrid, filtered.slice(0, 4));
             });
         });
 
@@ -127,29 +105,52 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Home load error:', err);
     }
 
-    // ── Helpers ────────────────────────────────────────────────────────
+    function distributeAndRender() {
+        // Trending: Just show first 8 for 'all'
+        renderEventGrid(trendingGrid, allEventsCached.slice(0, 8));
 
+        // Sports Section
+        const sports = allEventsCached.filter(e => e.category_slug === 'sports');
+        renderEventGrid(sportsGrid, sports.slice(0, 4));
+
+        // Movies Section
+        const movies = allEventsCached.filter(e => e.category_slug === 'movies');
+        renderEventGrid(moviesGrid, movies.slice(0, 4));
+
+        // Theatre Section
+        const theatre = allEventsCached.filter(e => e.category_slug === 'theatre');
+        renderEventGrid(theatreGrid, theatre.slice(0, 4));
+
+        // More Events: Everything else (Music, Comedy, etc.)
+        const mainSlugs = ['sports', 'movies', 'theatre'];
+        const more = allEventsCached.filter(e => !mainSlugs.includes(e.category_slug));
+        renderEventGrid(moreGrid, more.slice(0, 4));
+    }
+
+    // ── Helper: Premium Card Rendering ──────────────────────────────
     function renderEventGrid(container, events) {
         if (!container) return;
         if (!events || events.length === 0) {
             container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#aaa;">No events found in this category.</div>';
             return;
         }
+
         container.innerHTML = events.map(event => {
             const dateObj = event.date ? new Date(event.date) : null;
             const formattedDate = dateObj && !isNaN(dateObj)
                 ? dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
                 : 'TBD';
             const year = dateObj && !isNaN(dateObj) ? dateObj.getFullYear() : '';
+            const category = (event.category || 'EVENT').toUpperCase();
 
             return `
                 <div class="event-card-premium" onclick="window.location.href='${event.url}'">
                     <div class="event-card-image">
-                        <img src="${event.image}" alt="${event.name}" loading="lazy">
-                        <div class="event-card-category">${(event.category || 'EVENT').toUpperCase()}</div>
-                        ${event.ticketCount > 0
-                            ? `<div class="event-card-count"><i class="fas fa-ticket-alt"></i> ${event.ticketCount} Listings</div>`
-                            : ''}
+                        <img src="${event.image}" alt="${event.name}" loading="lazy" 
+                             onerror="this.src='https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=600&q=80'">
+                        <div class="event-card-category">${category}</div>
+                        ${event.movieRating ? `<div class="event-card-rating"><i class="fas fa-star" style="color:#ffc107;"></i> ${event.movieRating}</div>` : ''}
+                        ${event.ticketCount > 0 ? `<div class="event-card-count"><i class="fas fa-ticket-alt"></i> ${event.ticketCount} Listings</div>` : ''}
                     </div>
                     <div class="event-card-details">
                         <div class="event-card-date">
@@ -159,18 +160,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div class="event-card-info">
                             <h3 class="event-card-title">${event.name}</h3>
                             <div class="event-card-meta">
-                                <span><i class="fas fa-map-marker-alt"></i> ${event.location}</span>
+                                <span><i class="fas fa-map-marker-alt"></i> ${event.location || 'Venue TBD'}</span>
                                 ${event.time ? `<span><i class="far fa-clock"></i> ${event.time}</span>` : ''}
                             </div>
                         </div>
-                    </div>
-                    <div class="event-card-footer" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="color:var(--color-success); font-weight:800; font-size:1.1rem;">₹${event.price ? event.price : '--'}</span>
-                        <div style="display:flex; gap:10px;">
-                            ${event.ticketCount > 0
-                                ? `<button class="btn btn-primary btn-sm">Buy Ticket</button>`
-                                : `<a href="${TA.homeUrl}sell-ticket/?event_id=${event.id}" class="btn btn-outline btn-sm" onclick="event.stopPropagation();">Sell Ticket</a>`
-                            }
+                        <div class="event-card-price" style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <div class="price-value" style="font-size: 1.4rem; font-weight: 800; color: #fff;">
+                                ${event.price > 0 ? `${event.price.toLocaleString()}` : ''}
+                            </div>
+                            <div class="card-actions">
+                                ${event.ticketCount > 0 
+                                    ? `<button class="btn-buy" onclick="event.stopPropagation(); window.location.href='${event.url}'" style="background: #2563eb; color: #fff; border: none; padding: 10px 24px; border-radius: 12px; font-weight: 700; cursor: pointer;">Book Tickets</button>`
+                                    : `<button class="btn-sell" onclick="event.stopPropagation(); window.location.href='${TA.homeUrl}sell-ticket/?event_id=${event.id}'" style="background: rgba(255,255,255,0.05); color: #888; border: 1px solid rgba(255,255,255,0.1); padding: 10px 24px; border-radius: 12px; font-weight: 600; cursor: pointer;">Sell Tickets</button>`
+                                }
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -181,11 +184,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     function renderSellersGrid(container, sellers) {
         if (!container) return;
         if (!sellers || sellers.length === 0) {
-            container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#aaa;">None yet.</div>';
+            container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#aaa;">No featured sellers at the moment.</div>';
             return;
         }
-        container.innerHTML = sellers.map(seller => `
-            <div class="card" style="text-align:center;padding:25px;">
+        container.innerHTML = Array.isArray(sellers) ? sellers.map(seller => `
+            <div class="card" style="text-align:center;padding:25px; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 20px;">
                 <div style="width:60px;height:60px;background:linear-gradient(135deg,#3b82f6,#2563eb);border-radius:50%;margin:0 auto 15px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:bold;color:#fff;box-shadow:0 0 20px rgba(59,130,246,0.2);">
                     ${seller.name.charAt(0).toUpperCase()}
                 </div>
@@ -198,6 +201,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     Verified Seller
                 </div>
             </div>
-        `).join('');
+        `).join('') : '';
     }
 });

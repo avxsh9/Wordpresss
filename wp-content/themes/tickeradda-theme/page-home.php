@@ -25,6 +25,7 @@ get_header();
                 <button class="category-pill" data-category="sports">Sports</button>
                 <button class="category-pill" data-category="comedy">Comedy</button>
                 <button class="category-pill" data-category="theatre">Theatre</button>
+                <button class="category-pill" data-category="movies">Movies</button>
             </div>
         </div>
     </section>
@@ -106,7 +107,7 @@ get_header();
     </section>
 
     <!-- More Events -->
-    <section class="section more-events-section">
+    <section class="section more-events-section" id="homeMoreSection">
         <div class="container">
             <div class="section-header">
                 <div class="section-title">

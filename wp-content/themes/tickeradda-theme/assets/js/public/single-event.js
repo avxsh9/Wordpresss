@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function loadTickets() {
         try {
-            const response = await fetch(`${TA.restUrl}/events/${window.currentEventId}/tickets`);
+            const response = await fetch(`${TA.restUrl}/events-list/${window.currentEventId}/tickets`);
             const tickets = await response.json();
             
             renderTickets(tickets);

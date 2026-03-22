@@ -28,13 +28,16 @@ class UEM_Engine {
             while ( $query->have_posts() ) {
                 $query->the_post();
                 $post_id = get_the_ID();
-                $master_id = get_post_meta( $post_id, 'uem_master_id', true );
-                
-                global $wpdb;
-                $master = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}uem_master_events WHERE id = %d", $master_id ) );
+                $master_id = get_post_meta( $post_id, 'event_id', true );
+                $master = get_post( $master_id );
 
-                if ( $master ) {
-                    $expiry_time = strtotime( "{$master->event_date} {$master->event_time}" );
+                if ( $master && $master->post_type === 'events' ) {
+                    $event_id = $master->ID; // Define $event_id for clarity as used in the instruction's snippet
+                    $event_date = get_post_meta( $event_id, 'event_date', true );
+                    $event_time = get_post_meta( $event_id, 'event_time', true );
+                    $location   = get_post_meta( $event_id, 'event_location', true );
+                    $expiry_time = strtotime( "{$event_date} {$event_time}" );
+                    
                     if ( time() > $expiry_time ) {
                         update_post_meta( $post_id, 'uem_status', 'expired' );
                         wp_update_post( array( 'ID' => $post_id, 'post_status' => 'private' ) );
