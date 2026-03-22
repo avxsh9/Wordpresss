@@ -14,6 +14,13 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 class TA_PDF_Invoice {
 
     /**
+     * Check if DOMPDF is available.
+     */
+    public static function is_pdf_available() {
+        return file_exists( TA_PLUGIN_DIR . 'vendor/autoload.php' );
+    }
+
+    /**
      * Generate invoice.
      * Returns binary PDF string if DOMPDF available, else HTML string.
      *
@@ -26,9 +33,8 @@ class TA_PDF_Invoice {
         $html = self::build_html( $order, $buyer, $ticket, $seller );
 
         // Try DOMPDF if installed
-        $dompdf_path = TA_PLUGIN_DIR . 'vendor/autoload.php';
-        if ( file_exists( $dompdf_path ) ) {
-            require_once $dompdf_path;
+        if ( self::is_pdf_available() ) {
+            require_once TA_PLUGIN_DIR . 'vendor/autoload.php';
             $dompdf = new \Dompdf\Dompdf();
             $dompdf->loadHtml( $html );
             $dompdf->setPaper( 'A4', 'portrait' );

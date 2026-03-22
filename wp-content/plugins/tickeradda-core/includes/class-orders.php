@@ -196,7 +196,8 @@ class TA_Orders {
                 error_log( "[TickerAdda] Creating invoice directory: $invoice_dir" );
                 wp_mkdir_p( $invoice_dir );
             }
-            $attach_path = $invoice_dir . "invoice-{$order_id_s}.html";
+            $ext         = TA_PDF_Invoice::is_pdf_available() ? 'pdf' : 'html';
+            $attach_path = $invoice_dir . "invoice-{$order_id_s}.{$ext}";
             
             if ( file_put_contents( $attach_path, $pdf ) === false ) {
                 error_log( "[TickerAdda] Failed to save invoice at: $attach_path" );
@@ -306,9 +307,13 @@ class TA_Orders {
 
         // Add invoice too just in case
         $order_id_s  = str_pad( $order->id, 6, '0', STR_PAD_LEFT );
-        $invoice_path = TA_UPLOAD_DIR . "invoices/invoice-{$order_id_s}.html";
-        if ( file_exists( $invoice_path ) ) {
-            $attachments[] = $invoice_path;
+        $invoice_pdf  = TA_UPLOAD_DIR . "invoices/invoice-{$order_id_s}.pdf";
+        $invoice_html = TA_UPLOAD_DIR . "invoices/invoice-{$order_id_s}.html";
+
+        if ( file_exists( $invoice_pdf ) ) {
+            $attachments[] = $invoice_pdf;
+        } elseif ( file_exists( $invoice_html ) ) {
+            $attachments[] = $invoice_html;
         }
 
         $sent = TA_Email::send_ticket_delivery(
@@ -352,8 +357,15 @@ class TA_Orders {
 
         // Try to serve as PDF; otherwise as HTML
         $id_str = str_pad( $order_id, 6, '0', STR_PAD_LEFT );
-        header( 'Content-Type: text/html; charset=UTF-8' );
-        header( "Content-Disposition: attachment; filename=\"Invoice-{$id_str}.html\"" );
+        
+        if ( TA_PDF_Invoice::is_pdf_available() ) {
+            header( 'Content-Type: application/pdf' );
+            header( "Content-Disposition: attachment; filename=\"Invoice-{$id_str}.pdf\"" );
+        } else {
+            header( 'Content-Type: text/html; charset=UTF-8' );
+            header( "Content-Disposition: attachment; filename=\"Invoice-{$id_str}.html\"" );
+        }
+
         echo $html;
         exit;
     }
