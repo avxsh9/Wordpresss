@@ -1,0 +1,114 @@
+/* Universal Events Marketplace - Core Styles */
+:root {
+    --uem-primary: #1a73e8;
+    --uem-success: #2ecc71;
+    --uem-dark: #202124;
+    --uem-light: #f8f9fa;
+    --uem-gray: #5f6368;
+    --uem-radius: 12px;
+    --uem-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.uem-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+.uem-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+    margin-top: 30px;
+}
+
+/* Card Styling */
+.uem-card {
+    background: #fff;
+    border-radius: var(--uem-radius);
+    overflow: hidden;
+    box-shadow: var(--uem-shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid #f1f3f4;
+    text-decoration: none !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.uem-card:hover { transform: translateY(-10px); box-shadow: 0 12px 40px rgba(0,0,0,0.15); border-color: var(--uem-primary); }
+
+.uem-card-media {
+    position: relative;
+    height: 400px;
+    overflow: hidden;
+}
+
+.uem-card-media img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+.uem-card:hover .uem-card-media img { transform: scale(1.1); }
+
+.uem-badge {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    color: #fff;
+    text-transform: uppercase;
+    background: var(--uem-primary);
+}
+
+.uem-card-content { padding: 20px; flex-grow: 1; }
+.uem-card-title { font-size: 1.3rem; font-weight: 800; color: var(--uem-dark); margin: 0 0 10px 0; }
+.uem-card-info { color: var(--uem-gray); font-size: 0.95rem; margin-bottom: 5px; }
+
+.uem-card-footer {
+    padding: 15px 20px;
+    background: #fafafa;
+    border-top: 1px solid #f1f3f4;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.uem-price { font-size: 1.5rem; font-weight: 900; color: var(--uem-dark); }
+.uem-btn-card { padding: 8px 16px; background: var(--uem-primary); color: #fff; border-radius: 8px; font-weight: 700; }
+
+/* Filter Bar */
+.uem-filters {
+    display: flex;
+    gap: 15px;
+    background: #fff;
+    padding: 15px;
+    border-radius: var(--uem-radius);
+    box-shadow: var(--uem-shadow);
+    margin-bottom: 30px;
+}
+.uem-filters input, .uem-filters select { padding: 10px; border: 1px solid #ddd; border-radius: 8px; flex: 1; }
+.uem-btn-filter { background: var(--uem-dark); color: #fff; border: none; padding: 10px 25px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+
+/* Detail Page Hero */
+.uem-hero {
+    position: relative;
+    height: 450px;
+    background: #000;
+    margin-bottom: 40px;
+    overflow: hidden;
+    border-radius: var(--uem-radius);
+}
+.uem-hero-img { width: 100%; height: 100%; object-fit: cover; opacity: 0.4; filter: blur(10px); }
+.uem-hero-content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    padding: 50px;
+    gap: 40px;
+    color: #fff;
+}
+.uem-hero-poster { height: 350px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.uem-hero-title { font-size: 3rem; font-weight: 900; margin: 0; }
+
+/* Booking Table */
+.uem-seller-card { background: #fff; padding: 30px; border-radius: 16px; border: 1px solid #eee; }
+.uem-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+.uem-table th { text-align: left; padding: 15px; border-bottom: 2px solid #f1f3f4; }
+.uem-table td { padding: 15px; border-bottom: 1px solid #f1f3f4; }
+.uem-btn-book { background: var(--uem-success); color: #fff; padding: 10px 20px; border-radius: 8px; font-weight: 700; text-decoration: none; }
+.uem-btn-book:hover { opacity: 0.9; }
