@@ -89,42 +89,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         grid.innerHTML = events.map(event => {
+            const isMovie = false;
             const dateObj = event.date ? new Date(event.date) : null;
             const formattedDate = dateObj && !isNaN(dateObj)
-                ? dateObj.toLocaleDateString('en-IN', { day:'numeric', month:'short' })
+                ? dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
                 : 'TBD';
-            const year = dateObj && !isNaN(dateObj) ? dateObj.getFullYear() : '';
+
             return `
                 <div class="event-card-premium" onclick="window.location.href='${event.url}'">
                     <div class="event-card-image">
                         <img src="${event.image}" alt="${event.name}" loading="lazy"
                              onerror="this.src='https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=600&q=80'">
                         <div class="event-card-category">${(event.category || 'SPORTS').toUpperCase()}</div>
-                        ${event.ticketCount > 0 ? `<div class="event-card-count"><i class="fas fa-ticket-alt"></i> ${event.ticketCount} Listings</div>` : ''}
                     </div>
                     <div class="event-card-details">
-                        <div class="event-card-date">
-                            <span class="day">${formattedDate}</span>
-                            <span class="year">${year}</span>
+                        <h3 class="event-card-title">${event.name}</h3>
+                        <div class="event-card-meta">
+                            <span><i class="far fa-calendar-alt"></i> ${formattedDate} ${event.time ? `• ${event.time}` : ''}</span>
+                            <span><i class="fas fa-map-marker-alt"></i> ${event.location || 'Venue TBD'}</span>
                         </div>
-                        <div class="event-card-info">
-                            <h3 class="event-card-title">${event.name}</h3>
-                            <div class="event-card-meta">
-                                <span><i class="fas fa-map-marker-alt"></i> ${event.location || 'TBD'}</span>
-                                ${event.time ? `<span><i class="far fa-clock"></i> ${event.time}</span>` : ''}
-                            </div>
-                        </div>
-                        <div class="event-card-price" style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);">
-                            <div class="price-value" style="font-size: 1.4rem; font-weight: 800; color: #fff;">
-                                ${event.price > 0 ? `${event.price.toLocaleString()}` : ''}
-                            </div>
-                            <div class="card-actions">
-                                ${event.ticketCount > 0 
-                                    ? `<button class="btn-buy" onclick="event.stopPropagation(); window.location.href='${event.url}'" style="background: #2563eb; color: #fff; border: none; padding: 10px 24px; border-radius: 12px; font-weight: 700; cursor: pointer;">Book Tickets</button>`
-                                    : `<button class="btn-sell" onclick="event.stopPropagation(); window.location.href='${TA.homeUrl}sell-ticket/?event_id=${event.id}'" style="background: rgba(255,255,255,0.05); color: #888; border: 1px solid rgba(255,255,255,0.1); padding: 10px 24px; border-radius: 12px; font-weight: 600; cursor: pointer;">Sell Tickets</button>`
-                                }
-                            </div>
-                        </div>
+                    </div>
+                    <div class="event-card-actions">
+                        <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'">Book Tickets</button>
+                        <button class="card-btn-secondary" onclick="event.stopPropagation(); window.location.href='${TA.homeUrl}sell-ticket/?event_id=${event.id}'">
+                            <i class="fas fa-ticket-alt"></i> Sell Your Tickets
+                        </button>
                     </div>
                 </div>
             `;

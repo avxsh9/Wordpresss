@@ -392,12 +392,13 @@ class TA_Events {
             'category'    => $category_name, // Fixed to use actual name
             'category_slug' => $category_slug,
             'post_type'    => $post->post_type,
-            'all_meta'    => get_post_meta($post_id),
         );
 
         // Add extra fields for specialized views
         if ($post->post_type === 'movies') {
-            $data['movieRating'] = get_post_meta($post_id, 'imdb_rating', true) ?: get_post_meta($post_id, 'rating', true) ?: '';
+            $data['movieRating']   = get_post_meta($post_id, 'movie_rating', true) ?: get_post_meta($post_id, 'imdb_rating', true) ?: '8.5/10';
+            $data['movieCert']     = get_post_meta($post_id, 'movie_cert', true) ?: 'UA';
+            $data['movieLanguage'] = get_post_meta($post_id, 'language', true) ?: 'Hindi';
         }
         if ($post->post_type === 'sports_events') {
             $data['teams'] = get_post_meta($post_id, 'teams', true) ?: '';
