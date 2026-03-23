@@ -75,20 +75,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             const cert   = event.movieCert || 'UA';
 
             // Enhanced Sell Link with params
-            const sellUrl = `${TA.homeUrl}sell-ticket/?event_id=${event.id}&event_name=${encodeURIComponent(event.name)}&category=movies&venue=${encodeURIComponent(event.location || '')}&date=${event.date || ''}&time=${encodeURIComponent(event.time || '')}`;
+            const sellUrl = `${TA.homeUrl}sell-ticket/?event_id=${event.id}&event_name=${encodeURIComponent(event.name)}&category=${encodeURIComponent(event.category || '')}&venue=${encodeURIComponent(event.location || '')}&date=${event.date || ''}&time=${encodeURIComponent(event.time || '')}`;
 
             return `
-                <div class="event-card-premium" onclick="window.location.href='${event.url}'">
+                <div class="event-card-premium movie-card" onclick="window.location.href='${event.url}'">
                     <div class="event-card-image">
-                        <img src="${event.image}" alt="${event.name}" loading="lazy"
-                             onerror="this.src='https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&h=750&q=80'">
-                        <div class="event-card-category">MOVIE</div>
+                        <img src="${event.image}" alt="${event.name}" loading="lazy" 
+                             onerror="this.src='https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=600&q=80'">
+                        <div class="event-card-category">NOW SHOWING</div>
                         <div class="event-card-rating"><i class="fas fa-star"></i> ${rating}</div>
                     </div>
                     <div class="event-card-details">
-                        <h3 class="event-card-title">${event.name}</h3>
+                        <h3 class="event-card-title movie-title">${event.name}</h3>
                         <div class="event-card-meta">
-                            <span><i class="fas fa-star"></i> IMDb ${rating} • ${cert}</span>
+                            <span class="movie-meta-badge"><i class="fas fa-star"></i> IMDb ${rating}</span>
+                            <span class="movie-meta-badge"><i class="fas fa-user-shield"></i> Rated ${cert}</span>
                         </div>
                     </div>
                     <div class="event-card-actions">

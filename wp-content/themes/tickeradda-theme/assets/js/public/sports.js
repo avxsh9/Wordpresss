@@ -112,8 +112,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                         <div class="event-card-details">
                             <h3 class="event-card-title">${event.name}</h3>
+                            <h3 class="event-card-title movie-title">${event.name}</h3>
                             <div class="event-card-meta">
-                                <span><i class="fas fa-star"></i> IMDb ${rating} • ${cert}</span>
+                                <span class="movie-meta-badge"><i class="fas fa-star"></i> IMDb ${rating}</span>
+                                <span class="movie-meta-badge"><i class="fas fa-user-shield"></i> Rated ${cert}</span>
                             </div>
                         </div>
                         <div class="event-card-actions">
@@ -126,12 +128,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 `;
             }
 
+            // General minimalist card
             return `
                 <div class="event-card-premium" onclick="window.location.href='${event.url}'">
                     <div class="event-card-image">
-                        <img src="${event.image}" alt="${event.name}" loading="lazy"
+                        <img src="${event.image}" alt="${event.name}" loading="lazy" 
                              onerror="this.src='https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=600&q=80'">
-                        <div class="event-card-category">${(event.category || 'SPORTS').toUpperCase()}</div>
+                        <div class="event-card-category">${(event.category || 'SPORT').toUpperCase()}</div>
                     </div>
                     <div class="event-card-details">
                         <h3 class="event-card-title">${event.name}</h3>
