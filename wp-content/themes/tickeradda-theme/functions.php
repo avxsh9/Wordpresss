@@ -136,7 +136,11 @@ add_action( 'template_redirect', function() {
     
     // Redirect unauthenticated users
     if ( in_array( $slug, $protected_templates, true ) && ! is_user_logged_in() ) {
-        wp_redirect( home_url( '/login/' ) );
+        $login_url = home_url( '/login/' );
+        if ( ! empty( $_GET ) ) {
+            $login_url = add_query_arg( $_GET, $login_url );
+        }
+        wp_redirect( $login_url );
         exit;
     }
 
