@@ -70,34 +70,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         grid.innerHTML = movies.map(event => {
             const isMovie = true;
-            const dateObj = event.date ? new Date(event.date) : null;
-            const formattedDate = dateObj && !isNaN(dateObj)
-                ? dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
-                : 'TBD';
-            
             // Minimalist Movie Meta
             const rating = event.movieRating || '8.5';
             const cert   = event.movieCert || 'UA';
-            const lang   = event.movieLanguage || 'Hindi';
+
+            // Enhanced Sell Link with params
+            const sellUrl = `${TA.homeUrl}sell-ticket/?event_id=${event.id}&event_name=${encodeURIComponent(event.name)}&category=movies&venue=${encodeURIComponent(event.location || '')}&date=${event.date || ''}&time=${encodeURIComponent(event.time || '')}`;
 
             return `
                 <div class="event-card-premium" onclick="window.location.href='${event.url}'">
                     <div class="event-card-image">
                         <img src="${event.image}" alt="${event.name}" loading="lazy"
                              onerror="this.src='https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&h=750&q=80'">
-                        <div class="event-card-category">${(event.category || 'MOVIE').toUpperCase()}</div>
+                        <div class="event-card-category">MOVIE</div>
                         <div class="event-card-rating"><i class="fas fa-star"></i> ${rating}</div>
                     </div>
                     <div class="event-card-details">
                         <h3 class="event-card-title">${event.name}</h3>
                         <div class="event-card-meta">
-                            <span><i class="far fa-calendar-alt"></i> ${formattedDate} • ${cert} • ${lang}</span>
-                            <span><i class="fas fa-star"></i> IMDb ${rating}</span>
+                            <span><i class="fas fa-star"></i> IMDb ${rating} • ${cert}</span>
                         </div>
                     </div>
                     <div class="event-card-actions">
                         <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'">Book Tickets</button>
-                        <button class="card-btn-secondary" onclick="event.stopPropagation(); window.location.href='${TA.homeUrl}sell-ticket/?event_id=${event.id}'">
+                        <button class="card-btn-secondary" onclick="event.stopPropagation(); window.location.href='${sellUrl}'">
                             <i class="fas fa-ticket-alt"></i> Sell Your Tickets
                         </button>
                     </div>

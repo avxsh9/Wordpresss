@@ -45,49 +45,62 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleEventPreselection() {
         const urlParams = new URLSearchParams(window.location.search);
         const eventId = urlParams.get('event_id');
+        const urlEventName = urlParams.get('event_name');
+        const urlCategory = urlParams.get('category');
+        const urlVenue = urlParams.get('venue');
+        const urlDate = urlParams.get('date');
+        const urlTime = urlParams.get('time');
         
+        const eventEl = document.getElementById('ticketEvent');
+        const categoryEl = document.getElementById('ticketCategory');
+        const venueEl = document.getElementById('ticketVenue');
+        const dateEl = document.getElementById('ticketEventDate');
+        const timeEl = document.getElementById('ticketEventTime');
+        const eventIdEl = document.getElementById('eventId');
+
+        // Immediate fill from URL params for "instant" feel
+        if (urlEventName && eventEl) eventEl.value = decodeURIComponent(urlEventName);
+        if (urlCategory && categoryEl) categoryEl.value = urlCategory.toLowerCase();
+        if (urlVenue && venueEl) venueEl.value = decodeURIComponent(urlVenue);
+        if (urlDate && dateEl) dateEl.value = urlDate;
+        if (urlTime && timeEl) timeEl.value = decodeURIComponent(urlTime);
+        if (eventId && eventIdEl) eventIdEl.value = eventId;
+
         if (!eventId) return;
 
-        // If eventId exists in hidden input already (from PHP), let's just mark it
-        const eventIdEl = document.getElementById('eventId');
-        if (eventIdEl && eventIdEl.value) {
-            eventIdEl.setAttribute('data-preselected', 'true');
-        }
+        // Mark as pre-selected
+        if (eventIdEl) eventIdEl.setAttribute('data-preselected', 'true');
 
         try {
+            // Still fetch from API to ensure we have the most accurate data (like correct ID/Slug)
             const res = await fetch(`${TA.restUrl}/events/${eventId}`);
             if (!res.ok) return;
             
             const event = await res.json();
             
-            // Fill fields
-            const eventEl = document.getElementById('ticketEvent');
-            const categoryEl = document.getElementById('ticketCategory');
-            const venueEl = document.getElementById('ticketVenue');
-            const dateEl = document.getElementById('ticketEventDate');
-            const timeEl = document.getElementById('ticketEventTime');
-
-            if (eventEl) {
+            // Fill fields only if they haven't been touched or were already filled from URL
+            if (eventEl && (!eventEl.value || eventEl.value === event.name)) {
                 eventEl.value = event.name;
                 eventEl.readOnly = true;
                 eventEl.style.opacity = '0.7';
             }
-            if (categoryEl) {
+            if (categoryEl && event.category) {
                 categoryEl.value = event.category.toLowerCase();
                 categoryEl.disabled = true;
                 categoryEl.style.opacity = '0.7';
             }
-            if (venueEl) {
+            if (venueEl && event.location) {
                 venueEl.value = event.location;
+                // Only lock if we actually have data
                 venueEl.readOnly = true;
                 venueEl.style.opacity = '0.7';
             }
-            if (dateEl) {
+            if (dateEl && event.date) {
                 dateEl.value = event.date;
                 dateEl.readOnly = true;
                 dateEl.style.opacity = '0.7';
             }
-            if (timeEl) {
+            if (timeEl && event.time) {
                 timeEl.value = event.time;
                 timeEl.readOnly = true;
                 timeEl.style.opacity = '0.7';

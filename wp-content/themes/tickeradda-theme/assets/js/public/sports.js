@@ -89,11 +89,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         grid.innerHTML = events.map(event => {
-            const isMovie = false;
             const dateObj = event.date ? new Date(event.date) : null;
             const formattedDate = dateObj && !isNaN(dateObj)
                 ? dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
                 : 'TBD';
+
+            // Enhanced Sell Link with params
+            const sellUrl = `${TA.homeUrl}sell-ticket/?event_id=${event.id}&event_name=${encodeURIComponent(event.name)}&category=sports&venue=${encodeURIComponent(event.location || '')}&date=${event.date || ''}&time=${encodeURIComponent(event.time || '')}`;
 
             return `
                 <div class="event-card-premium" onclick="window.location.href='${event.url}'">
@@ -111,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                     <div class="event-card-actions">
                         <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'">Book Tickets</button>
-                        <button class="card-btn-secondary" onclick="event.stopPropagation(); window.location.href='${TA.homeUrl}sell-ticket/?event_id=${event.id}'">
+                        <button class="card-btn-secondary" onclick="event.stopPropagation(); window.location.href='${sellUrl}'">
                             <i class="fas fa-ticket-alt"></i> Sell Your Tickets
                         </button>
                     </div>
