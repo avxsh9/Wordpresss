@@ -2,6 +2,14 @@
 /**
  * Template Name: Home
  */
+
+// ── Prevent LiteSpeed / any proxy from caching this page ──────────────────────
+// This page is dynamic (JS fetches live event data), caching breaks it.
+do_action( 'litespeed_control_set_nocache', 'Homepage is fully dynamic (JS-driven)' );
+header( 'Cache-Control: no-store, no-cache, must-revalidate, max-age=0' );
+header( 'Pragma: no-cache' );
+header( 'Expires: 0' );
+
 get_header();
 ?>
 
