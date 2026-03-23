@@ -97,22 +97,17 @@ get_header();
                             <span id="summaryPrice">₹0</span>
                         </div>
                         <div
-                            style="display: flex; justify-content: space-between; margin-bottom: 10px; color: var(--text-gray);">
-                            <span>Platform Fee (5%)</span>
-                            <span id="platformFee">₹0</span>
-                        </div>
-                        <div
                             style="display: flex; justify-content: space-between; margin-top: 20px; padding-top: 20px; border-top: 1px dashed var(--glass-border); font-size: 1.2rem; font-weight: bold;">
-                            <span>Total</span>
+                            <span>Total (Pay directly to Seller)</span>
                             <span id="summaryTotal" style="color: var(--primary);">₹0</span>
                         </div>
                     </div>
                     <button id="payBtn" class="btn btn-primary"
-                        style="width: 100%; margin-top: 30px; padding: 15px; font-size: 1.1rem;">
-                        Proceed to Pay
+                        style="width: 100%; margin-top: 30px; padding: 15px; font-size: 1.1rem; background-color: #16a34a; border-color: #16a34a;">
+                        <i class="fas fa-handshake"></i> I have bought this ticket
                     </button>
                     <p style="text-align: center; margin-top: 15px; font-size: 0.8rem; color: var(--text-gray);">
-                        By clicking "Proceed to Pay", you agree to our Terms of Service.
+                        Clicking ensures the seller is notified. Please contact the seller directly to complete the transfer.
                     </p>
                 </div>
             </div>

@@ -1,12 +1,18 @@
 <?php
 /**
- * Plugin Name: Events Marketplace
+ * DISABLED - This plugin conflicts with tickeradda-core (same REST namespace tickeradda/v2)
+ * Plugin Name was: Events Marketplace
+ * DO NOT RE-ENABLE — use tickeradda-core plugin instead.
+ *
  * Description: Unified master events and seller ticket marketplace.
  * Version: 1.1.0
  * Author: TickerAdda
  */
 
+// Plugin disabled — exits early to prevent REST route conflicts
 if ( ! defined( 'ABSPATH' ) ) exit;
+return; // Stop all further execution
+
 
 // Define Constants
 define( 'UEM_DIR', plugin_dir_path( __FILE__ ) );

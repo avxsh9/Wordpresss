@@ -46,6 +46,8 @@ class TA_Activator {
             event_time  VARCHAR(10) NOT NULL,
             file_url    VARCHAR(512),
             file_hash   VARCHAR(64),
+            payment_proof_url VARCHAR(512),
+            agreement_accepted TINYINT(1) NOT NULL DEFAULT 0,
             status      ENUM('pending','approved','rejected','available','sold') NOT NULL DEFAULT 'pending',
             is_unlisted TINYINT(1) NOT NULL DEFAULT 0,
             created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

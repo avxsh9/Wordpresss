@@ -132,7 +132,29 @@
     }
 }
 
-/* Header Spacing Fix */
-.has-kyc-banner .navbar {
-    margin-top: 0; /* Already inside site-header stack */
+/* Dashboard Card Responsiveness */
+@media (max-width: 480px) {
+    .order-card, .stat-card {
+        padding: 15px !important;
+    }
+    .order-meta {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+    .seller-info-block {
+        padding: 12px !important;
+    }
+    .gradient-text {
+        font-size: 1.8rem !important;
+    }
+    .refresh-btn {
+        width: 100%;
+        justify-content: center;
+    }
 }
+
+/* Site-wide Header Spacing */
+#main {
+    min-height: 80vh;
+}
+

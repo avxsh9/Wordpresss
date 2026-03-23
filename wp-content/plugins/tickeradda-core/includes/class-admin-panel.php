@@ -123,7 +123,7 @@ class TA_Admin_Panel {
                 <thead>
                     <tr>
                         <th>ID</th><th>Event</th><th>Type</th><th>Price</th><th>Qty</th>
-                        <th>Event Date</th><th>Seller</th><th>Status</th><th>Actions</th>
+                        <th>Event Date</th><th>Seller</th><th>Proof</th><th>Agreement</th><th>Status</th><th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -136,6 +136,21 @@ class TA_Admin_Panel {
                     <td><?php echo esc_html( $t->quantity ); ?></td>
                     <td><?php echo esc_html( date( 'd M Y', strtotime( $t->event_date ) ) ); ?></td>
                     <td><?php echo esc_html( $t->seller_name . ' (' . $t->seller_email . ')' ); ?></td>
+                    <td>
+                        <?php if ( ! empty( $t->payment_proof_url ) ) : ?>
+                        <a href="<?php echo esc_url( add_query_arg( '_wpnonce', wp_create_nonce( 'wp_rest' ), rest_url( TA_REST_NS . '/tickets/secure-image/' . $t->id . '?type=proof' ) ) ); ?>"
+                           target="_blank" class="button button-small" style="color: #10b981; border-color: #10b981;"><span class="dashicons dashicons-media-document" style="vertical-align: middle; font-size: 14px; margin-top: -2px;"></span> View</a>
+                        <?php else : ?>
+                        <span style="color:#888">N/A</span>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <?php if ( isset( $t->agreement_accepted ) && $t->agreement_accepted ) : ?>
+                        <span class="ta-badge ta-badge-approved">Yes</span>
+                        <?php else : ?>
+                        <span class="ta-badge ta-badge-rejected">No</span>
+                        <?php endif; ?>
+                    </td>
                     <td>
                         <span class="ta-badge ta-badge-<?php echo esc_attr( $t->status ); ?>">
                             <?php echo esc_html( ucfirst( $t->status ) ); ?>
@@ -153,7 +168,7 @@ class TA_Admin_Panel {
                     </td>
                 </tr>
                 <?php endforeach; else : ?>
-                <tr><td colspan="9">No tickets found.</td></tr>
+                <tr><td colspan="11">No tickets found.</td></tr>
                 <?php endif; ?>
                 </tbody>
             </table>

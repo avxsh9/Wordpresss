@@ -48,16 +48,89 @@ get_header();
                         in 10 mins.</small>
                 </div>
                 <button type="submit" class="btn-auth" id="signupBtn">Sign Up</button>
-                <button type="button"
-                    style="width: 100%; margin-top: 20px; padding: 12px; background: transparent; border: 1px solid #334155; border-radius: 8px; color: white; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;">
-                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" style="width: 20px;">
-                    Sign up with Google
-                </button>
+                
+                <!-- Google Sign-In Button Container -->
+                <div id="googleBtnContainer" style="margin-top: 20px;"></div>
+
                 <div class="auth-footer">
                     Already have an account? <a href="<?php echo esc_url(home_url('/login/')); ?>">Sign In</a>
                 </div>
             </form>
         </div>
+
+        <!-- Google Identity Services Library -->
+        <script src="https://accounts.google.com/gsi/client" async></script>
+        <script>
+            function handleGoogleResponse(response) {
+                if (!response.credential) return;
+
+                // Show loading state
+                const btnContainer = document.getElementById('googleBtnContainer');
+                btnContainer.style.opacity = '0.5';
+                btnContainer.style.pointerEvents = 'none';
+
+                fetch(TA.restUrl + '/auth/google-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': TA.nonce
+                    },
+                    body: JSON.stringify({ credential: response.credential })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.user) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Account created/logged in successfully!',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            const urlParams = new URLSearchParams(window.location.search);
+                            let redirectUrl = urlParams.get('redirect_to') || sessionStorage.getItem('returnUrl');
+                            
+                            if (redirectUrl) {
+                                sessionStorage.removeItem('returnUrl');
+                                window.location.href = decodeURIComponent(redirectUrl);
+                            } else {
+                                window.location.href = TA.homeUrl + (data.user.role === 'admin' ? 'wp-admin/admin.php?page=tickeradda' : 'buyer-dashboard-2/');
+                            }
+                        });
+                    } else {
+                        Swal.fire('Error', data.message || 'Google signup failed', 'error');
+                        btnContainer.style.opacity = '1';
+                        btnContainer.style.pointerEvents = 'all';
+                    }
+                })
+                .catch(err => {
+                    console.error('Google Signup Error:', err);
+                    Swal.fire('Error', 'Something went wrong. Please try again.', 'error');
+                    btnContainer.style.opacity = '1';
+                    btnContainer.style.pointerEvents = 'all';
+                });
+            }
+
+            window.onload = function () {
+                google.accounts.id.initialize({
+                    client_id: "539426267370-e12lt552ilkencgo97qcaf01kl4mpt26.apps.googleusercontent.com",
+                    callback: handleGoogleResponse
+                });
+                google.accounts.id.renderButton(
+                    document.getElementById("googleBtnContainer"),
+                    { 
+                        theme: "outline", 
+                        size: "large", 
+                        width: document.querySelector('.btn-auth').offsetWidth,
+                        text: "signup_with",
+                        shape: "rectangular",
+                        logo_alignment: "left"
+                    }
+                );
+                // Also show One Tap dialogue
+                google.accounts.id.prompt(); 
+            };
+        </script>
         <div class="auth-right">
             <div class="right-content">
                 <h2 class="quote-large">"I ADMIT IT, ANOTHER CLASSIC"</h2>

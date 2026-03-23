@@ -66,6 +66,12 @@ class TA_Auth {
             'permission_callback' => 'is_user_logged_in',
         ) );
 
+        register_rest_route( $ns, '/auth/google-login', array(
+            'methods'             => 'POST',
+            'callback'            => array( $this, 'google_login' ),
+            'permission_callback' => '__return_true',
+        ) );
+
         register_rest_route( $ns, '/users/featured', array(
             'methods'             => 'GET',
             'callback'            => array( $this, 'get_featured_sellers' ),
@@ -180,6 +186,87 @@ class TA_Auth {
             'msg'   => 'Registration successful.',
             'token' => wp_create_nonce( 'wp_rest' ),
             'user'  => self::user_response( $user_id ),
+            'nonce' => wp_create_nonce( 'wp_rest' ),
+        ) );
+    }
+
+    // ── POST /auth/google-login ────────────────────────────────────────────────
+    public function google_login( WP_REST_Request $request ) {
+        $credential = $request->get_param( 'credential' );
+
+        if ( empty( $credential ) ) {
+            return new WP_Error( 'missing_credential', 'Google credential is required.', array( 'status' => 400 ) );
+        }
+
+        // Verify ID Token with Google API
+        $response = wp_remote_get( "https://oauth2.googleapis.com/tokeninfo?id_token=" . urlencode( $credential ) );
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'google_api_error', 'Failed to connect to Google API.', array( 'status' => 500 ) );
+        }
+
+        $body = wp_remote_retrieve_body( $response );
+        $data = json_decode( $body, true );
+
+        if ( empty( $data ) || ! isset( $data['email'] ) || isset( $data['error'] ) ) {
+            return new WP_Error( 'invalid_token', 'Invalid Google token.', array( 'status' => 401 ) );
+        }
+
+        // Validate Audience (Client ID)
+        $client_id = "539426267370-e12lt552ilkencgo97qcaf01kl4mpt26.apps.googleusercontent.com";
+        if ( $data['aud'] !== $client_id ) {
+             return new WP_Error( 'invalid_aud', 'Invalid client ID.', array( 'status' => 401 ) );
+        }
+
+        $email = $data['email'];
+        $name  = $data['name'] ?? '';
+        $user  = get_user_by( 'email', $email );
+
+        if ( ! $user ) {
+            // Auto-register user
+            $username = sanitize_user( $email );
+            $password = wp_generate_password();
+            $user_id  = wp_create_user( $username, $password, $email );
+
+            if ( is_wp_error( $user_id ) ) {
+                return $user_id;
+            }
+
+            $user = new WP_User( $user_id );
+            $user->set_role( 'ta_both' );
+            wp_update_user( array( 'ID' => $user_id, 'display_name' => $name, 'first_name' => $name ) );
+            
+            update_user_meta( $user_id, 'ta_role_label', 'both' );
+            update_user_meta( $user_id, 'ta_kyc_status', 'not_submitted' );
+            update_user_meta( $user_id, 'ta_ban_status', 'none' );
+            update_user_meta( $user_id, 'ta_average_rating', 0 );
+            update_user_meta( $user_id, 'ta_ratings_count', 0 );
+            update_user_meta( $user_id, 'google_user_id', $data['sub'] ?? '' );
+            
+            $user = get_user_by( 'id', $user_id );
+        } else {
+             // Check ban status
+            $ban = get_user_meta( $user->ID, 'ta_ban_status', true );
+            if ( $ban && $ban !== 'none' ) {
+                $reason = get_user_meta( $user->ID, 'ta_ban_reason', true ) ?: 'Policy Violation';
+                $msg = $ban === 'permanent'
+                    ? "Your account is permanently banned. Reason: {$reason}."
+                    : "Your account is temporarily blocked. Reason: {$reason}.";
+                return new WP_Error( 'account_banned', $msg, array( 'status' => 403 ) );
+            }
+            
+            // Link Google ID if not already linked
+            if ( ! get_user_meta( $user->ID, 'google_user_id', true ) ) {
+                update_user_meta( $user->ID, 'google_user_id', $data['sub'] ?? '' );
+            }
+        }
+
+        wp_set_current_user( $user->ID );
+        wp_set_auth_cookie( $user->ID, true );
+
+        return rest_ensure_response( array(
+            'msg'   => 'Login successful.',
+            'token' => wp_create_nonce( 'wp_rest' ),
+            'user'  => self::user_response( $user->ID ),
             'nonce' => wp_create_nonce( 'wp_rest' ),
         ) );
     }

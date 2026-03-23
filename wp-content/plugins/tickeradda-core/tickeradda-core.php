@@ -48,6 +48,19 @@ register_deactivation_hook( __FILE__, array( 'TA_Activator', 'deactivate' ) );
 // ─── Boot the Plugin ─────────────────────────────────────────────────────────
 add_action( 'plugins_loaded', 'tickeradda_init' );
 
+add_action('init', function() {
+    if (!get_option('ta_db_update_payment_proof')) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'ta_tickets';
+        // Ignore errors if columns already exist
+        $wpdb->suppress_errors(true);
+        $wpdb->query("ALTER TABLE `{$table}` ADD COLUMN `payment_proof_url` VARCHAR(512) DEFAULT NULL AFTER `file_hash`");
+        $wpdb->query("ALTER TABLE `{$table}` ADD COLUMN `agreement_accepted` TINYINT(1) DEFAULT 0 AFTER `payment_proof_url`");
+        $wpdb->suppress_errors(false);
+        update_option('ta_db_update_payment_proof', 1);
+    }
+});
+
 function tickeradda_init() {
     // Initialize core components globally for hooks/CPTs
     $GLOBALS['ta_security'] = new TA_Security();

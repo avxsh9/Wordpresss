@@ -328,12 +328,13 @@ class TA_Events {
     }
 
     public function get_event( $request ) {
-        $id = $request['id'];
-        $post = get_post($id);
-        if (!$post || !in_array($post->post_type, array('events', 'movies', 'sports_events'))) {
-            return new WP_Error('no_event', 'Event not found', array('status' => 404));
+        $id = absint( $request['id'] );
+        $post = get_post( $id );
+        // Accept any published post — events, sports, movies, etc.
+        if ( ! $post || $post->post_status !== 'publish' ) {
+            return new WP_Error( 'no_event', 'Event not found', array( 'status' => 404 ) );
         }
-        return rest_ensure_response($this->format_event($post));
+        return rest_ensure_response( $this->format_event( $post ) );
     }
 
     public function get_event_tickets( $request ) {

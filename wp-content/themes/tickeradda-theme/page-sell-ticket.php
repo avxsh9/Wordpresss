@@ -7,7 +7,7 @@ get_header();
 
 <main id="main">
 <section class="section">
-        <div class="container" style="max-width: 800px; margin-top: 50px;">
+        <div class="container" style="max-width: 800px; margin-top: 100px;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
                 <a href="<?php echo esc_url(home_url('/seller-dashboard/')); ?>" style="color: var(--color-text-muted); text-decoration: none;">
                     <i class="fas fa-arrow-left"></i> Back to Dashboard
@@ -25,21 +25,23 @@ get_header();
                             style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: white;">
                         <datalist id="events">
                             <?php
+                            $all_post_types = array('events', 'sports', 'ta_sports', 'movies', 'sports_events');
                             $events_query = get_posts(array(
-                                'post_type' => 'events',
+                                'post_type' => $all_post_types,
                                 'posts_per_page' => -1,
                                 'post_status' => 'publish'
                             ));
                             $event_details = array();
-                            foreach ($events_query as $ev) : 
+                            foreach ($events_query as $ev) :
                                 $cat_terms = wp_get_post_terms($ev->ID, 'event_cat', array('fields' => 'slugs'));
+                                $cat_type  = !empty($cat_terms) ? $cat_terms[0] : strtolower($ev->post_type);
                                 $event_details[] = array(
-                                    'id' => $ev->ID,
-                                    'name' => $ev->post_title,
-                                    'date' => get_post_meta($ev->ID, 'event_date', true),
-                                    'time' => get_post_meta($ev->ID, 'event_time', true),
-                                    'location' => get_post_meta($ev->ID, 'event_location', true),
-                                    'category' => !empty($cat_terms) ? $cat_terms[0] : 'other'
+                                    'id'       => $ev->ID,
+                                    'name'     => $ev->post_title,
+                                    'date'     => get_post_meta($ev->ID, 'event_date', true),
+                                    'time'     => get_post_meta($ev->ID, 'event_time', true),
+                                    'location' => get_post_meta($ev->ID, 'event_location', true) ?: get_post_meta($ev->ID, 'venue', true),
+                                    'category' => $cat_type
                                 );
                             ?>
                                 <option value="<?php echo esc_attr($ev->post_title); ?>">
@@ -114,17 +116,30 @@ get_header();
                                 style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: white;">
                         </div>
                     </div>
-                    <div id="dropZone"
-                        style="margin-bottom: 30px; padding: 30px; border: 2px dashed var(--glass-border); border-radius: 10px; text-align: center; cursor: pointer; transition: 0.3s;">
-                        <input type="file" id="ticketFile" hidden accept=".pdf,.jpg,.jpeg,.png">
-                        <i class="fas fa-cloud-upload-alt"
-                            style="font-size: 30px; color: var(--primary); margin-bottom: 10px;"></i>
-                        <p style="color: var(--text-gray); margin-bottom: 5px;">Drag & drop ticket PDF or click to
-                            browse</p>
-                        <p id="fileName"
-                            style="color: var(--primary); font-weight: 600; font-size: 0.9rem; min-height: 20px;">
+                    <div id="proofDropZone"
+                        style="margin-bottom: 25px; padding: 30px; border: 2px dashed var(--glass-border); border-radius: 10px; text-align: center; cursor: pointer; transition: 0.3s; background: rgba(16, 185, 129, 0.05);">
+                        <input type="file" id="paymentProofFile" hidden accept=".pdf,.jpg,.jpeg,.png">
+                        <i class="fas fa-file-invoice-dollar"
+                            style="font-size: 30px; color: #10b981; margin-bottom: 10px;"></i>
+                        <p style="color: var(--text-gray); margin-bottom: 5px;">Upload Payment Proof <span style="color:#ef4444; font-weight: bold;">*MANDATORY*</span></p>
+                        <p style="font-size: 0.85rem; color: #888; margin-bottom: 5px;">(e.g., booking screenshot, payment receipt)</p>
+                        <p id="proofFileName"
+                            style="color: #10b981; font-weight: 600; font-size: 0.9rem; min-height: 20px;">
                         </p>
                     </div>
+
+                    <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 10px; margin-bottom: 30px; border: 1px solid var(--glass-border);">
+                        <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
+                            <input type="checkbox" id="legalAgreement" style="margin-top: 5px; width: 18px; height: 18px; accent-color: var(--primary);">
+                            <span style="color: var(--text-gray); font-size: 0.9rem; line-height: 1.5;">
+                                <strong style="color: white;">I confirm that:</strong><br>
+                                • I have legally purchased this ticket.<br>
+                                • I will NOT use this ticket after selling.<br>
+                                • I understand that fraud may result in account suspension and legal action.
+                            </span>
+                        </label>
+                    </div>
+
                     <button type="button" id="submitTicketBtn" class="btn btn-primary"
                         style="width: 100%; justify-content: center; font-size: 18px;">
                         List Ticket for Sale

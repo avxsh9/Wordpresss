@@ -44,7 +44,7 @@ add_action( 'wp_enqueue_scripts', function() {
     if ( in_array( $template, array('page-seller-dashboard.php', 'page-kyc-verification.php', 'page-sell-ticket.php', 'page-listings.php', 'page-my-tickets.php') ) ) {
         wp_enqueue_style( 'ta-seller', $uri . '/assets/css/seller.css', array('ta-main'), $v );
     }
-    if ( in_array( $template, array('page-buyer-dashboard.php', 'page-orders.php') ) ) {
+    if ( in_array( $template, array('page-buyer-dashboard.php', 'page-orders.php', 'page-my-tickets.php') ) ) {
         wp_enqueue_style( 'ta-buyer', $uri . '/assets/css/buyer.css', array('ta-main'), $v );
     }
 
@@ -68,8 +68,8 @@ add_action( 'wp_enqueue_scripts', function() {
         'page-sell-movie.php'       => 'public/sell-movie.js',
         'page-sell-sport.php'       => 'public/sell-sport.js',
         'page-listings.php'         => 'seller/my-listings.js',
-        'page-my-tickets.php'       => 'seller/my-listings.js',
-        'page-buyer-dashboard.php'  => 'buyer/dashboard.js',
+        'page-my-tickets.php'       => 'buyer/buyer-dashboard.js',
+        'page-buyer-dashboard.php'  => 'buyer/buyer-dashboard.js',
         'page-orders.php'           => 'buyer/order-history.js',
     );
 
@@ -118,6 +118,7 @@ add_action( 'wp_enqueue_scripts', function() {
 
 // ── Auth Redirects (WordPress Native) ─────────────────────────────────────────
 add_action( 'template_redirect', function() {
+    global $wp;
     $protected_templates = array(
         'page-seller-dashboard.php',
         'page-buyer-dashboard.php',
@@ -137,10 +138,19 @@ add_action( 'template_redirect', function() {
     // Redirect unauthenticated users
     if ( in_array( $slug, $protected_templates, true ) && ! is_user_logged_in() ) {
         $login_url = home_url( '/login/' );
-        if ( ! empty( $_GET ) ) {
-            $login_url = add_query_arg( $_GET, $login_url );
+        // Append current page as redirect_to
+        $current_url = home_url( add_query_arg( array(), $wp->request ) );
+        if ( ! empty( $_SERVER['QUERY_STRING'] ) ) {
+            $current_url .= '?' . $_SERVER['QUERY_STRING'];
         }
+        $login_url = add_query_arg( 'redirect_to', urlencode( $current_url ), $login_url );
         wp_redirect( $login_url );
+        exit;
+    }
+
+    // Redirect /dashboard/ to /buyer-dashboard-2/
+    if ( is_page( 'dashboard' ) ) {
+        wp_redirect( home_url( '/buyer-dashboard-2/' ) );
         exit;
     }
 

@@ -37,12 +37,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 background: '#18181b',
                 color: '#fff'
             });
-            if (data.user && data.user.role === 'admin') {
-                window.location.href = TA.homeUrl + 'wp-admin/admin.php?page=tickeradda-admin';
-            } else if (data.user && (data.user.role === 'seller' || data.user.role === 'both')) {
+            const urlParams = new URLSearchParams(window.location.search);
+            let redirectUrl = urlParams.get('redirect_to') || sessionStorage.getItem('returnUrl');
+
+            if (redirectUrl) {
+                sessionStorage.removeItem('returnUrl');
+                window.location.href = decodeURIComponent(redirectUrl);
+            } else if (data.user && data.user.role === 'admin') {
+                window.location.href = TA.homeUrl + 'wp-admin/admin.php?page=tickeradda';
+            } else if (data.user && (data.user.role === 'both' || data.user.role === 'seller')) {
                 window.location.href = TA.homeUrl + 'seller-dashboard/';
             } else {
-                window.location.href = TA.homeUrl + 'buyer-dashboard/';
+                window.location.href = TA.homeUrl + 'buyer-dashboard-2/';
             }
             
             // Backup redirect after 2 seconds if above fails

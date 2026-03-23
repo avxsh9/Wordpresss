@@ -1,2 +1,21 @@
 /* TickerAdda Seller Styles */
+.seller-dash-wrap { padding-top: 20px; }
+.seller-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
+.stat-card { background: rgba(255,255,255,0.03); padding: 25px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
+.stat-label { color: #aaa; margin-bottom: 10px; font-size: 0.9rem; }
+.stat-value { font-size: 2rem; font-weight: 700; color: #fff; }
+.stat-value.success { color: #10B981; }
+
+.table-container { background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; }
+.seller-table { width: 100%; border-collapse: collapse; }
+.seller-table th { text-align: left; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #888; font-size: 0.85rem; text-transform: uppercase; }
+.seller-table td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #ddd; font-size: 0.95rem; }
+
+@media (max-width: 768px) {
+    .seller-stats-grid { grid-template-columns: 1fr; }
+    .seller-table thead { display: none; }
+    .seller-table tr { display: block; padding: 15px; border-bottom: 2px solid rgba(255,255,255,0.1); }
+    .seller-table td { display: flex; justify-content: space-between; padding: 8px 0; border: none; text-align: right; }
+    .seller-table td::before { content: attr(data-label); font-weight: 600; color: #888; text-align: left; font-size: 0.8rem; }
+}
 .seller-card { background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); border-radius: 12px; padding: 20px; }

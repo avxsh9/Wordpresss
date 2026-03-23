@@ -86,14 +86,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!res.ok) throw new Error(data.message || data.msg || 'Registration failed');
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Welcome to TickerAdda!',
-                    text: 'Email verified & account created successfully.',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-                window.location.href = TA.homeUrl + "kyc-verification/";
+                const urlParams = new URLSearchParams(window.location.search);
+                let redirectUrl = urlParams.get('redirect_to') || sessionStorage.getItem('returnUrl');
+
+                if (redirectUrl) {
+                    sessionStorage.removeItem('returnUrl');
+                    window.location.href = decodeURIComponent(redirectUrl);
+                } else {
+                    window.location.href = TA.homeUrl + "kyc-verification/";
+                }
                 
                 // Backup redirect
                 setTimeout(() => {

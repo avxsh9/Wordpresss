@@ -127,6 +127,50 @@ class TA_Email {
         return self::send( $seller_email, $subject, $html );
     }
 
+    // ── Buyer Is Interested — Notify Seller ───────────────────────────────────
+    public static function send_buyer_interested( $seller_email, $seller_name, $buyer_name, $buyer_email, $buyer_phone, $ticket, $order_id ) {
+        $subject = "📢 New Purchase Request: {$ticket->event_name}";
+        $amount  = '₹' . number_format( $ticket->price, 2 );
+
+        $html = self::base_template( $subject, "
+            <p>Hi {$seller_name},</p>
+            <p>Great news! A buyer is interested in purchasing your ticket for <strong>" . esc_html( $ticket->event_name ) . "</strong>.</p>
+            <div style='background:#f9fafb;border-radius:8px;padding:20px;margin:20px 0;border:1px solid #e5e7eb;'>
+                <p><strong>Buyer Name:</strong> {$buyer_name}</p>
+                <p><strong>Buyer Email:</strong> {$buyer_email}</p>
+                <p><strong>Buyer Phone:</strong> {$buyer_phone}</p>
+                <p><strong>Ticket Price:</strong> {$amount}</p>
+            </div>
+            <p>Please log in to your <a href='" . home_url('/seller-dashboard') . "' style='color:#4f46e5;'>Seller Dashboard</a> to confirm the sale and contact the buyer to arrange payment/transfer.</p>
+        " );
+
+        return self::send( $seller_email, $subject, $html );
+    }
+
+    // ── Sale Confirmed — Notify Buyer ─────────────────────────────────────────
+    public static function send_sale_confirmed( $buyer_email, $buyer_name, $seller_name, $seller_email, $seller_phone, $ticket, $order ) {
+        $order_id_s = '#' . str_pad( $order->id, 6, '0', STR_PAD_LEFT );
+        $subject = "✅ Purchase Confirmed: {$ticket->event_name}";
+        $amount  = '₹' . number_format( $order->total_amount, 2 );
+
+        $html = self::base_template( $subject, "
+            <p>Hi {$buyer_name},</p>
+            <p>The seller has <strong style='color:#16a34a;'>confirmed</strong> your purchase request for <strong>" . esc_html( $ticket->event_name ) . "</strong>!</p>
+            <div style='background:#f0fdf4;border-radius:8px;padding:20px;margin:20px 0;border:1px solid #bbf7d0;'>
+                <p><strong>Order ID:</strong> {$order_id_s}</p>
+                <p><strong>Amount to Pay:</strong> {$amount}</p>
+                <h4 style='margin-bottom:5px;'>Seller Contact Details:</h4>
+                <p style='margin:0;'><strong>Name:</strong> {$seller_name}</p>
+                <p style='margin:0;'><strong>Email:</strong> {$seller_email}</p>
+                <p style='margin:0;'><strong>Phone:</strong> {$seller_phone}</p>
+            </div>
+            <p>Please contact the seller to arrange the payment and ticket transfer.</p>
+            <p>Thank you for using TickerAdda!</p>
+        " );
+
+        return self::send( $buyer_email, $subject, $html );
+    }
+
     // ── KYC Status Email ──────────────────────────────────────────────────────
     public static function send_kyc_status( $to, $name, $status, $reason = '' ) {
         $is_approved = $status === 'approved';

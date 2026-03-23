@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('ticketFile');
-    const fileNameDisplay = document.getElementById('fileName');
+    const proofDropZone = document.getElementById('proofDropZone');
+    const paymentProofFile = document.getElementById('paymentProofFile');
+    const proofFileNameDisplay = document.getElementById('proofFileName');
+    const agreementCheckbox = document.getElementById('legalAgreement');
     const submitBtn = document.getElementById('submitTicketBtn');
 
     if (!TA.loggedIn) {
@@ -73,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Still fetch from API to ensure we have the most accurate data (like correct ID/Slug)
-            const res = await fetch(`${TA.restUrl}/events/${eventId}`);
+            const res = await fetch(`${TA.restUrl}/events-list/${eventId}`);
             if (!res.ok) return;
             
             const event = await res.json();
@@ -196,37 +197,43 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (dropZone) {
-        dropZone.addEventListener('click', () => {
-            if (fileInput) fileInput.click();
+    if (proofDropZone) {
+        proofDropZone.addEventListener('click', () => {
+            if (paymentProofFile) paymentProofFile.click();
         });
 
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, preventDefaults, false);
+            proofDropZone.addEventListener(eventName, preventDefaults, false);
         });
 
         ['dragenter', 'dragover'].forEach(eventName => {
-            dropZone.addEventListener(eventName, highlight, false);
+            proofDropZone.addEventListener(eventName, () => {
+                proofDropZone.style.borderColor = '#10b981';
+                proofDropZone.style.backgroundColor = 'rgba(16, 185, 129, 0.15)';
+            }, false);
         });
 
         ['dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, unhighlight, false);
+            proofDropZone.addEventListener(eventName, () => {
+                proofDropZone.style.borderColor = 'var(--glass-border)';
+                proofDropZone.style.backgroundColor = 'rgba(16, 185, 129, 0.05)';
+            }, false);
         });
 
-        dropZone.addEventListener('drop', (e) => {
+        proofDropZone.addEventListener('drop', (e) => {
             const dt = e.dataTransfer;
             const files = dt.files;
-            if (files.length > 0 && fileInput) {
-                fileInput.files = files; 
-                handleFile(files[0]);
+            if (files.length > 0 && paymentProofFile) {
+                paymentProofFile.files = files; 
+                handleProofFile(files[0]);
             }
         });
     }
 
-    if (fileInput) {
-        fileInput.addEventListener('change', (e) => {
+    if (paymentProofFile) {
+        paymentProofFile.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
-                handleFile(e.target.files[0]);
+                handleProofFile(e.target.files[0]);
             }
         });
     }
@@ -236,36 +243,22 @@ document.addEventListener('DOMContentLoaded', () => {
         e.stopPropagation();
     }
 
-    function highlight() {
-        if (dropZone) {
-            dropZone.style.borderColor = 'var(--primary)';
-            dropZone.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
-        }
-    }
-
-    function unhighlight() {
-        if (dropZone) {
-            dropZone.style.borderColor = 'var(--glass-border)';
-            dropZone.style.backgroundColor = 'transparent';
-        }
-    }
-
-    function handleFile(file) {
+    function handleProofFile(file) {
         const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
         if (!validTypes.includes(file.type)) {
-            if (typeof showAlert === 'function') showAlert('Invalid file', 'Please upload a PDF or Image.', 'error');
-            if (fileInput) fileInput.value = ''; 
-            if (fileNameDisplay) fileNameDisplay.textContent = '';
+            if (typeof showAlert === 'function') showAlert('Invalid file', 'Please upload a PDF or Image for Payment Proof.', 'error');
+            if (paymentProofFile) paymentProofFile.value = ''; 
+            if (proofFileNameDisplay) proofFileNameDisplay.textContent = '';
             return;
         }
         if (file.size > 5 * 1024 * 1024) {
             if (typeof showAlert === 'function') showAlert('File too large', 'Max size is 5MB.', 'error');
-            if (fileInput) fileInput.value = '';
-            if (fileNameDisplay) fileNameDisplay.textContent = '';
+            if (paymentProofFile) paymentProofFile.value = '';
+            if (proofFileNameDisplay) proofFileNameDisplay.textContent = '';
             return;
         }
-        if (fileNameDisplay) {
-            fileNameDisplay.innerHTML = `<i class="fas fa-check-circle" style="margin-right: 5px;"></i> ${file.name}`;
+        if (proofFileNameDisplay) {
+            proofFileNameDisplay.innerHTML = `<i class="fas fa-check-circle" style="margin-right: 5px;"></i> ${file.name}`;
         }
     }
 
@@ -282,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const venueEl = document.getElementById('ticketVenue');
             const sectionEl = document.getElementById('ticketSection');
 
-            if (!eventEl || !categoryEl || !priceEl || !eventDateEl || !eventTimeEl || !venueEl || !fileInput) {
+            if (!eventEl || !categoryEl || !priceEl || !eventDateEl || !eventTimeEl || !venueEl || !paymentProofFile) {
                 console.error('One or more required form elements are missing.');
                 return;
             }
@@ -298,13 +291,39 @@ document.addEventListener('DOMContentLoaded', () => {
             const venue = venueEl.value;
             const section = sectionEl ? sectionEl.value : '';
 
-            if (!event || !category || !price || !eventDate || !eventTime || !venue) {
-                if (typeof showAlert === 'function') showAlert("Missing Fields", "Please fill in all required fields.", "warning");
+            const isMovie = category === 'movies';
+
+            // For non-movie events, date and time are required (they have fixed show times)
+            // For movies, date/time can be blank since screenings vary by cinema
+            const missingFields = [];
+            if (!event)     missingFields.push('Event Name');
+            if (!category)  missingFields.push('Category');
+            if (!price)     missingFields.push('Price');
+            if (!venue && !isMovie)     missingFields.push('Venue');
+            if (!eventDate && !isMovie) missingFields.push('Event Date');
+            if (!eventTime && !isMovie) missingFields.push('Event Time');
+
+            if (missingFields.length > 0) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: '⚠️ Missing Fields',
+                        html: 'Please fill in: <strong>' + missingFields.join(', ') + '</strong>',
+                        icon: 'warning',
+                        background: '#18181b', color: '#fff', confirmButtonColor: '#3b82f6'
+                    });
+                } else if (typeof showAlert === 'function') {
+                    showAlert('Missing Fields', 'Please fill in: ' + missingFields.join(', '), 'warning');
+                }
                 return;
             }
 
-            if (fileInput.files.length === 0) {
-                if (typeof showAlert === 'function') showAlert("Missing File", "Please upload a ticket file (PDF or Image).", "warning");
+            if (!paymentProofFile || paymentProofFile.files.length === 0) {
+                if (typeof showAlert === 'function') showAlert("Missing Payment Proof", "Please upload proof of purchase.", "warning");
+                return;
+            }
+
+            if (!agreementCheckbox || !agreementCheckbox.checked) {
+                if (typeof showAlert === 'function') showAlert("Agreement Required", "You must confirm the legal agreement to list the ticket.", "warning");
                 return;
             }
 
@@ -335,7 +354,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append('venue', venue);
                 formData.append('quantity', quantity);
                 formData.append('price', price);
-                formData.append('ticketFile', fileInput.files[0]);
+                formData.append('paymentProof', paymentProofFile.files[0]);
+                formData.append('agreement', agreementCheckbox.checked ? '1' : '0');
 
                 const res = await fetch(TA.restUrl + '/tickets', {
                     method: 'POST',
@@ -358,10 +378,18 @@ document.addEventListener('DOMContentLoaded', () => {
                         window.location.href = TA.homeUrl + "seller-dashboard/";
                     });
                 } else {
-                    if (typeof showAlert === 'function') {
-                        showAlert('Error', data.message || data.msg || 'Error listing ticket', 'error');
-                    } else if (typeof Swal !== 'undefined') {
-                        Swal.fire({ title: 'Error', text: data.message || data.msg || 'Error listing ticket', icon: 'error' });
+                    const errMsg = data.message || data.msg || data.data?.message || 'Unknown error. Please try again.';
+                    console.error('Ticket listing error:', data);
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Listing Failed',
+                            html: `<div style="text-align:left;font-size:0.9rem;">${errMsg}</div>`,
+                            icon: 'error',
+                            background: '#18181b', color: '#fff',
+                            confirmButtonColor: '#ef4444'
+                        });
+                    } else if (typeof showAlert === 'function') {
+                        showAlert('Error', errMsg, 'error');
                     }
                     submitBtn.innerHTML = 'List Ticket for Sale';
                     submitBtn.disabled = false;

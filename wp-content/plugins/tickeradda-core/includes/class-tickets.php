@@ -103,49 +103,88 @@ class TA_Tickets {
             return new WP_Error( 'kyc_required', 'KYC verification required before listing tickets.', array( 'status' => 403 ) );
         }
 
-        $event_id    = TA_Security::clean_int( $request->get_param( 'event_id' ) );
-        $event_name  = TA_Security::clean( $request->get_param( 'event' ) );
-        $type        = TA_Security::clean( $request->get_param( 'category' ) ); // The select box 'category' maps to 'type'
-        $price       = TA_Security::clean_float( $request->get_param( 'price' ) );
-        $quantity    = TA_Security::clean_int( $request->get_param( 'quantity' ) );
-        $event_date  = TA_Security::clean( $request->get_param( 'eventDate' ) );
-        $event_time  = TA_Security::clean( $request->get_param( 'eventTime' ) );
-        $section     = TA_Security::clean( $request->get_param( 'section' ) );
-        $row_label   = TA_Security::clean( $request->get_param( 'row' ) );
-        $seat_number = TA_Security::clean( $request->get_param( 'seat_number' ) );
-        $venue       = TA_Security::clean( $request->get_param( 'venue' ) );
-        $description = TA_Security::clean( $request->get_param( 'description' ) );
+        // ── IMPORTANT: WordPress REST API does NOT parse multipart/form-data
+        // into $request->get_param(). We MUST read $_POST directly for text
+        // fields and $_FILES for file uploads when Content-Type is multipart.
+        error_log( 'TA create_ticket $_POST: ' . print_r( $_POST, true ) );
+        error_log( 'TA create_ticket $_FILES: ' . print_r( $_FILES, true ) );
 
-        if ( empty( $event_name ) || empty( $price ) || empty( $quantity ) || empty( $event_date ) || empty( $event_time ) ) {
-            return new WP_Error( 'missing_fields', 'Event name, price, quantity, event date and time are required.', array( 'status' => 400 ) );
+        // Read text fields directly from $_POST
+        $event_id    = isset( $_POST['event_id'] )    ? absint( $_POST['event_id'] )                             : 0;
+        $event_name  = isset( $_POST['event'] )        ? sanitize_text_field( wp_unslash( $_POST['event'] ) )     : '';
+        $type        = isset( $_POST['category'] )     ? sanitize_text_field( wp_unslash( $_POST['category'] ) )  : 'other';
+        $price       = isset( $_POST['price'] )        ? (float) $_POST['price']                                  : 0.0;
+        $quantity    = isset( $_POST['quantity'] )     ? absint( $_POST['quantity'] )                             : 0;
+        $event_date  = isset( $_POST['eventDate'] )    ? sanitize_text_field( wp_unslash( $_POST['eventDate'] ) ) : '';
+        $event_time  = isset( $_POST['eventTime'] )    ? sanitize_text_field( wp_unslash( $_POST['eventTime'] ) ) : '';
+        $section     = isset( $_POST['section'] )      ? sanitize_text_field( wp_unslash( $_POST['section'] ) )   : '';
+        $row_label   = isset( $_POST['row'] )          ? sanitize_text_field( wp_unslash( $_POST['row'] ) )       : '';
+        $seat_number = isset( $_POST['seat_number'] )  ? sanitize_text_field( wp_unslash( $_POST['seat_number'] )): '';
+        $venue       = isset( $_POST['venue'] )        ? sanitize_text_field( wp_unslash( $_POST['venue'] ) )     : '';
+        $description = isset( $_POST['description'] )  ? sanitize_textarea_field( wp_unslash( $_POST['description'] ) ) : '';
+        $agreement   = isset( $_POST['agreement'] )    ? absint( $_POST['agreement'] )                           : 0;
+
+        // Validate required fields with granular errors
+        // Note: eventDate and eventTime are optional (e.g. movies have variable screening times)
+        $missing = array();
+        if ( empty( $event_name ) )  $missing[] = 'event (event name)';
+        if ( empty( $price ) )       $missing[] = 'price';
+        if ( empty( $quantity ) )    $missing[] = 'quantity';
+
+        if ( ! empty( $missing ) ) {
+            return new WP_Error(
+                'missing_fields',
+                'Required fields missing: ' . implode( ', ', $missing ) . '. Received POST keys: ' . implode( ', ', array_keys( $_POST ) ),
+                array( 'status' => 400 )
+            );
         }
 
         if ( $price <= 0 || $quantity <= 0 ) {
             return new WP_Error( 'invalid_values', 'Price and quantity must be positive numbers.', array( 'status' => 400 ) );
         }
 
-        // Handle file upload
+        // ── File Upload: read directly from $_FILES ───────────────────────────
+        // ── File Upload (paymentProof) ──────────────────────────────────────────
         $file_url  = null;
         $file_hash = null;
 
-        if ( ! empty( $_FILES['ticketFile'] ) ) {
-            $upload = TA_Security::handle_upload( $_FILES['ticketFile'], null, 5 );
-            if ( is_wp_error( $upload ) ) return $upload;
+        $proof_file = ! empty( $_FILES['paymentProof'] ) ? $_FILES['paymentProof'] : null;
 
-            // Duplicate check via hash
-            global $wpdb;
-            $t = TA_Database::tickets_table();
-            $existing = $wpdb->get_var( $wpdb->prepare(
-                "SELECT id FROM {$t} WHERE file_hash = %s AND status NOT IN ('rejected', 'sold')",
-                $upload['file_hash']
-            ) );
-            if ( $existing ) {
-                @unlink( $upload['full_path'] );
-                return new WP_Error( 'duplicate_ticket', 'This ticket image has already been submitted.', array( 'status' => 400 ) );
-            }
+        if ( ! $proof_file ) {
+            return new WP_Error(
+                'missing_proof',
+                'No payment proof file was received. Make sure you selected a file before submitting.',
+                array( 'status' => 400 )
+            );
+        }
 
-            $file_url  = $upload['url'];
-            $file_hash = $upload['file_hash'];
+        // Translate PHP upload error codes into human-readable messages
+        $upload_err = $proof_file['error'];
+        if ( $upload_err !== UPLOAD_ERR_OK ) {
+            $php_upload_errors = array(
+                UPLOAD_ERR_INI_SIZE   => 'File is too large (exceeds server upload_max_filesize limit). Please use an image under 2MB.',
+                UPLOAD_ERR_FORM_SIZE  => 'File exceeds the form upload size limit.',
+                UPLOAD_ERR_PARTIAL    => 'File was only partially uploaded. Please try again.',
+                UPLOAD_ERR_NO_FILE    => 'No file was selected. Please choose a payment proof image.',
+                UPLOAD_ERR_NO_TMP_DIR => 'Server temporary folder is missing. Contact your host.',
+                UPLOAD_ERR_CANT_WRITE => 'Server failed to write the file to disk.',
+                UPLOAD_ERR_EXTENSION  => 'A PHP extension blocked the upload.',
+            );
+            $err_msg = isset( $php_upload_errors[ $upload_err ] ) ? $php_upload_errors[ $upload_err ] : 'Unknown upload error (code: ' . $upload_err . ').';
+            return new WP_Error( 'upload_error', 'Payment proof upload failed: ' . $err_msg, array( 'status' => 400 ) );
+        }
+
+        // File size check: max 5MB
+        if ( $proof_file['size'] > 5 * 1024 * 1024 ) {
+            return new WP_Error( 'file_too_large', 'Payment proof image exceeds the 5MB limit. Please compress or resize it.', array( 'status' => 400 ) );
+        }
+
+        $proof_upload = TA_Security::handle_upload( $proof_file, null, 5 );
+        if ( is_wp_error( $proof_upload ) ) return $proof_upload;
+        $payment_proof_url = $proof_upload['url'];
+
+        if ( ! $agreement ) {
+            return new WP_Error( 'missing_agreement', 'You must accept the legal agreement checkbox.', array( 'status' => 400 ) );
         }
 
         // Auto-create event if missing to ensure dedicated page exists
@@ -194,8 +233,10 @@ class TA_Tickets {
             'event_time'  => $event_time,
             'file_url'    => $file_url,
             'file_hash'   => $file_hash,
+            'payment_proof_url' => $payment_proof_url,
+            'agreement_accepted'=> $agreement ? 1 : 0,
             'status'      => 'pending',
-        ), array( '%d', '%s', '%s', '%d', '%f', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' ) );
+        ), array( '%d', '%s', '%s', '%d', '%f', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s' ) );
 
         if ( ! $inserted ) {
             error_log( 'TickerAdda DB Error: ' . $wpdb->last_error );
@@ -321,11 +362,11 @@ class TA_Tickets {
 
         $tickets = $wpdb->get_results( $wpdb->prepare(
             "SELECT t.*,
-             o.buyer_id, o.id as order_id, o.total_amount as order_total,
+             o.buyer_id, o.id as order_id, o.total_amount as order_total, o.status as order_status,
              u.display_name as buyer_name, u.user_email as buyer_email,
              um.meta_value as buyer_phone
              FROM {$table} t
-             LEFT JOIN {$orders} o ON t.id = o.ticket_id AND o.status = 'completed'
+             LEFT JOIN {$orders} o ON t.id = o.ticket_id AND o.status IN ('pending', 'completed')
              LEFT JOIN {$wpdb->users} u ON o.buyer_id = u.ID
              LEFT JOIN {$wpdb->usermeta} um ON o.buyer_id = um.user_id AND um.meta_key = 'ta_phone'
              WHERE t.seller_id = %d
@@ -411,6 +452,7 @@ class TA_Tickets {
     public function serve_ticket_image( WP_REST_Request $request ) {
         global $wpdb;
         $id      = TA_Security::clean_int( $request->get_param( 'id' ) );
+        $type    = sanitize_text_field( $request->get_param( 'type' ) ?? '' );
         $user_id = get_current_user_id();
         $table   = TA_Database::tickets_table();
         $orders  = TA_Database::orders_table();
@@ -437,13 +479,15 @@ class TA_Tickets {
             return new WP_Error( 'forbidden', 'Access denied.', array( 'status' => 403 ) );
         }
 
-        if ( empty( $ticket->file_url ) ) {
-            return new WP_Error( 'no_file', 'No ticket image available.', array( 'status' => 404 ) );
+        $file_segment = ($type === 'proof') ? $ticket->payment_proof_url : $ticket->file_url;
+
+        if ( empty( $file_segment ) ) {
+            return new WP_Error( 'no_file', 'No file/image available.', array( 'status' => 404 ) );
         }
 
-        $full_path = TA_UPLOAD_DIR . $ticket->file_url;
+        $full_path = TA_UPLOAD_DIR . $file_segment;
         if ( ! file_exists( $full_path ) ) {
-            return new WP_Error( 'file_not_found', 'Ticket file not found on server.', array( 'status' => 404 ) );
+            return new WP_Error( 'file_not_found', 'File not found on server.', array( 'status' => 404 ) );
         }
 
         // Serve binary — bypass WP's REST JSON output
@@ -497,6 +541,8 @@ class TA_Tickets {
                 'email' => esc_html( $t->buyer_email ),
                 'phone' => esc_html( $t->buyer_phone ),
             ) : null,
+            'orderStatus'    => $t->order_status ?? null,
+            'orderId'        => (int) ($t->order_id ?? 0),
             'buyerName'      => isset( $t->buyer_name ) ? esc_html( $t->buyer_name ) : null,
             'buyerEmail'     => isset( $t->buyer_email ) ? esc_html( $t->buyer_email ) : null,
             'buyerPhone'     => isset( $t->buyer_phone ) ? esc_html( $t->buyer_phone ) : null,

@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${ticket.status === 'sold' ? `
                         <button class="btn btn-danger btn-sm" disabled style="width: 100%; border-radius: 8px; cursor: not-allowed; opacity: 0.8;"><i class="fas fa-ban"></i> Sold Out</button>
                     ` : `
-                        <button class="btn btn-primary btn-sm buy-btn" data-id="${ticket.id}" style="width: 100%; border-radius: 8px;">Go to Checkout</button>
+                        <button class="btn btn-primary btn-sm buy-btn" data-id="${ticket.id}" style="width: 100%; border-radius: 8px;"><i class="fas fa-ticket-alt"></i> Request to Buy</button>
                     `}
                 </div>
             </div>
