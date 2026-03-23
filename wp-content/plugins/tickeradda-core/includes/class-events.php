@@ -395,7 +395,9 @@ class TA_Events {
         );
 
         // Add extra fields for specialized views
-        if ($post->post_type === 'movies') {
+        $is_movie_cat = (strtolower($category_name) === 'movies');
+        
+        if ($post->post_type === 'movies' || $is_movie_cat) {
             $data['movieRating']   = get_post_meta($post_id, 'movie_rating', true) ?: get_post_meta($post_id, 'imdb_rating', true) ?: '8.5/10';
             $data['movieCert']     = get_post_meta($post_id, 'movie_cert', true) ?: 'UA';
             $data['movieLanguage'] = get_post_meta($post_id, 'language', true) ?: 'Hindi';

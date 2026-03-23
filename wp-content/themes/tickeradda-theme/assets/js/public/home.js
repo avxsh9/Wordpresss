@@ -129,14 +129,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ── Helper: Premium Card Rendering ──────────────────────────────
     function renderEventGrid(container, events) {
-        if (!container) return;
-        if (!events || events.length === 0) {
-            container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#aaa;">No events found in this category.</div>';
+    function renderEventGrid(eventsContainer, data) {
+        if (!eventsContainer) return;
+        if (!data || data.length === 0) {
+            eventsContainer.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#aaa;">No events found in this category.</div>';
             return;
         }
 
-        container.innerHTML = events.map(event => {
-            const isMovie = event.post_type === 'movies';
+        eventsContainer.innerHTML = data.map(event => {
+            const isMovie = event.post_type === 'movies' || (event.category && event.category.toLowerCase() === 'movies');
             const dateObj = event.date ? new Date(event.date) : null;
             const formattedDate = dateObj && !isNaN(dateObj)
                 ? dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
@@ -145,10 +146,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Minimalist Movie Meta
             const rating = event.movieRating || '8.5';
             const cert   = event.movieCert || 'UA';
-            const lang   = event.movieLanguage || 'Hindi';
 
             // Enhanced Sell Link with params
-            const sellUrl = `${TA.homeUrl}sell-ticket/?event_id=${event.id}&event_name=${encodeURIComponent(event.name)}&category=${event.category}&venue=${encodeURIComponent(event.location || '')}&date=${event.date || ''}&time=${encodeURIComponent(event.time || '')}`;
+            const sellUrl = `${TA.homeUrl}sell-ticket/?event_id=${event.id}&event_name=${encodeURIComponent(event.name)}&category=${encodeURIComponent(event.category || '')}&venue=${encodeURIComponent(event.location || '')}&date=${event.date || ''}&time=${encodeURIComponent(event.time || '')}`;
 
             // Movie specific content: Only Poster, Name, IMDb, Rating
             if (isMovie) {

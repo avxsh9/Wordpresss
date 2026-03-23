@@ -75,10 +75,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Minimalist Movie Meta
             const rating = event.movieRating || '8.5';
             const cert   = event.movieCert || 'UA';
-            const lang   = event.movieLanguage || 'Hindi';
 
             // Enhanced Sell Link with params
-            const sellUrl = `${TA.homeUrl}sell-ticket/?event_id=${event.id}&event_name=${encodeURIComponent(event.name)}&category=${event.category || ''}&venue=${encodeURIComponent(event.location || '')}&date=${event.date || ''}&time=${encodeURIComponent(event.time || '')}`;
+            const sellUrl = `${TA.homeUrl}sell-ticket/?event_id=${event.id}&event_name=${encodeURIComponent(event.name)}&category=${encodeURIComponent(event.category || '')}&venue=${encodeURIComponent(event.location || '')}&date=${event.date || ''}&time=${encodeURIComponent(event.time || '')}`;
 
             // Movie specific content: Only Poster, Name, IMDb, Rating
             if (isMovie) {
