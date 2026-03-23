@@ -77,6 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!res.ok) return;
             
             const event = await res.json();
+            const isMovie = (event.category_slug && event.category_slug.toLowerCase() === 'movies') || 
+                            (event.category && event.category.toLowerCase() === 'movies');
             
             // Fill fields only if they haven't been touched or were already filled from URL
             if (eventEl && (!eventEl.value || eventEl.value === event.name)) {
@@ -85,25 +87,44 @@ document.addEventListener('DOMContentLoaded', () => {
                 eventEl.style.opacity = '0.7';
             }
             if (categoryEl && event.category) {
-                categoryEl.value = event.category.toLowerCase();
+                categoryEl.value = isMovie ? 'movies' : event.category.toLowerCase();
                 categoryEl.disabled = true;
                 categoryEl.style.opacity = '0.7';
             }
-            if (venueEl && event.location) {
-                venueEl.value = event.location;
-                // Only lock if we actually have data
-                venueEl.readOnly = true;
-                venueEl.style.opacity = '0.7';
-            }
-            if (dateEl && event.date) {
-                dateEl.value = event.date;
-                dateEl.readOnly = true;
-                dateEl.style.opacity = '0.7';
-            }
-            if (timeEl && event.time) {
-                timeEl.value = event.time;
-                timeEl.readOnly = true;
-                timeEl.style.opacity = '0.7';
+            
+            if (isMovie) {
+                if (venueEl) {
+                    if (venueEl.value === 'Venue TBD' || venueEl.value === event.location) venueEl.value = '';
+                    venueEl.placeholder = 'e.g. PVR Director\'s Cut, Vasant Kunj';
+                    venueEl.readOnly = false;
+                    venueEl.style.opacity = '1';
+                }
+                if (dateEl) {
+                    if (dateEl.value === 'TBD' || dateEl.value === event.date) dateEl.value = '';
+                    dateEl.readOnly = false;
+                    dateEl.style.opacity = '1';
+                }
+                if (timeEl) {
+                    if (timeEl.value === 'TBD' || timeEl.value === event.time) timeEl.value = '';
+                    timeEl.readOnly = false;
+                    timeEl.style.opacity = '1';
+                }
+            } else {
+                if (venueEl && event.location && event.location.toLowerCase() !== 'venue tbd') {
+                    venueEl.value = event.location;
+                    venueEl.readOnly = true;
+                    venueEl.style.opacity = '0.7';
+                }
+                if (dateEl && event.date && event.date !== 'TBD') {
+                    dateEl.value = event.date;
+                    dateEl.readOnly = true;
+                    dateEl.style.opacity = '0.7';
+                }
+                if (timeEl && event.time && event.time !== 'TBD') {
+                    timeEl.value = event.time;
+                    timeEl.readOnly = true;
+                    timeEl.style.opacity = '0.7';
+                }
             }
         } catch (err) {
             console.error('Event fetch error:', err);
@@ -123,12 +144,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (selected) {
                 if (eventIdEl) eventIdEl.value = selected.id;
-                if (categoryEl) categoryEl.value = selected.category;
-                if (venueEl) venueEl.value = selected.location;
-                if (dateEl) dateEl.value = selected.date;
-                if (timeEl) {
-                    const timeInput = document.getElementById('ticketEventTime');
-                    if (timeInput) timeInput.value = selected.time;
+                
+                const isMovie = (selected.category && selected.category.toLowerCase() === 'movies');
+                if (categoryEl) categoryEl.value = isMovie ? 'movies' : selected.category.toLowerCase();
+
+                const timeInput = document.getElementById('ticketEventTime');
+
+                if (isMovie) {
+                    if (venueEl) {
+                        venueEl.value = '';
+                        venueEl.placeholder = 'e.g. PVR Director\'s Cut';
+                        venueEl.readOnly = false;
+                        venueEl.style.opacity = '1';
+                    }
+                    if (dateEl) {
+                        dateEl.value = '';
+                        dateEl.readOnly = false;
+                        dateEl.style.opacity = '1';
+                    }
+                    if (timeInput) {
+                        timeInput.value = '';
+                        timeInput.readOnly = false;
+                        timeInput.style.opacity = '1';
+                    }
+                } else {
+                    if (venueEl) {
+                        venueEl.value = selected.location && selected.location.toLowerCase() !== 'venue tbd' ? selected.location : '';
+                        venueEl.readOnly = !!venueEl.value;
+                        venueEl.style.opacity = venueEl.value ? '0.7' : '1';
+                    }
+                    if (dateEl) {
+                        dateEl.value = selected.date && selected.date !== 'TBD' ? selected.date : '';
+                        dateEl.readOnly = !!dateEl.value;
+                        dateEl.style.opacity = dateEl.value ? '0.7' : '1';
+                    }
+                    if (timeInput) {
+                        timeInput.value = selected.time && selected.time !== 'TBD' ? selected.time : '';
+                        timeInput.readOnly = !!timeInput.value;
+                        timeInput.style.opacity = timeInput.value ? '0.7' : '1';
+                    }
                 }
                 
                 eventInput.style.border = '1px solid var(--primary)';

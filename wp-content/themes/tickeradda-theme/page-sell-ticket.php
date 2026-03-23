@@ -56,6 +56,7 @@ get_header();
                         <label style="display: block; color: var(--text-gray); margin-bottom: 10px;">Event
                             Category</label>
                         <select id="ticketCategory" name="category" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: white; appearance: none;">
+                            <option value="movies">Movies</option>
                             <option value="music">Music / Concert</option>
                             <option value="sports">Sports / Matches</option>
                             <option value="comedy">Standup Comedy</option>
