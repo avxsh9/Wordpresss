@@ -97,6 +97,10 @@ class TA_Orders {
         $seller_user = get_user_by( 'id', $ticket->seller_id );
 
         if ( $seller_user ) {
+            $seller_phone = get_user_meta( $ticket->seller_id, 'ta_phone', true );
+            $seller_kyc   = get_user_meta( $ticket->seller_id, 'ta_kyc_status', true );
+
+            // Notify Seller about the interested buyer
             TA_Email::send_buyer_interested(
                 $seller_user->user_email,
                 esc_html( $seller_user->display_name ),
@@ -106,12 +110,29 @@ class TA_Orders {
                 $ticket,
                 $order_id
             );
+
+            // Also Notify Buyer with Seller details for direct contact
+            TA_Email::send_purchase_request_confirmation(
+                $buyer_user->user_email,
+                esc_html( $buyer_user->display_name ),
+                esc_html( $seller_user->display_name ),
+                esc_html( $seller_user->user_email ),
+                esc_html( $seller_phone ),
+                $ticket,
+                $order_id
+            );
         }
 
         return rest_ensure_response( array(
             'id'       => $order_id,
             'status'   => 'success',
-            'message'  => 'Purchase request submitted successfully. The seller has been notified.'
+            'message'  => 'Purchase request submitted successfully. The seller has been notified.',
+            'seller'   => array(
+                'name'  => esc_html( $seller_user->display_name ),
+                'email' => esc_html( $seller_user->user_email ),
+                'phone' => esc_html( $seller_phone ),
+                'kyc'   => $seller_kyc === 'approved' ? 'Verified' : 'Pending'
+            )
         ) );
     }
 
@@ -176,7 +197,7 @@ class TA_Orders {
 
         $rows = $wpdb->get_results( $wpdb->prepare(
             "SELECT o.*, t.event_name, t.event_date, t.event_time, t.price as ticket_price,
-             t.seller_id, t.venue, t.section, t.seat_number as seat, t.file_url,
+             t.seller_id, t.venue, t.section, t.seat_number as seat, t.file_url, t.status as ticket_status,
              u.display_name as seller_name, u.user_email as seller_email,
              bu.display_name as buyer_name, bu.user_email as buyer_email,
              um.meta_value as seller_phone,
@@ -244,12 +265,13 @@ class TA_Orders {
             'sellerEmail'     => esc_html( $o->seller_email ?? '' ),
             'sellerPhone'     => esc_html( $o->seller_phone ?? '' ),
             'sellerKycStatus' => esc_html( $o->seller_kyc_status ?? '' ),
-            'sellerAvgRating' => (float) ( $o->seller_avg_rating ?? 0 ),
+
             'quantity'        => (int) ( $o->quantity ?? 1 ),
             'subtotal'        => (float) ( $o->subtotal ?? 0 ),
             'platformFee'     => (float) ( $o->platform_fee ?? 0 ),
             'totalAmount'     => (float) $o->total_amount,
             'status'          => $o->status,
+            'ticketStatus'    => $o->ticket_status ?? '',
             'createdAt'       => $o->created_at,
             'ticket' => array(
                 '_id'     => (int) $o->ticket_id,

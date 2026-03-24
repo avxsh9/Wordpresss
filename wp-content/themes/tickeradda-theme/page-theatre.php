@@ -66,7 +66,7 @@ input[type="range"] { width:100%; accent-color:var(--primary); margin:8px 0; }
 </style>
 
 <main id="main">
-    <section class="section" style="padding-top:120px; padding-bottom:60px;">
+    <section class="section" style="padding-bottom:60px;">
         <div class="container">
             <div class="theatre-page-container">
 

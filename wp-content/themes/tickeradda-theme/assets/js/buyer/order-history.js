@@ -66,9 +66,6 @@ async function loadMyOrders() {
                             <button class="btn btn-sm btn-outline" style="flex:1; min-width: 100px;" onclick="downloadInvoice(${order.id})">
                                 <i class="fas fa-file-invoice"></i> Invoice
                             </button>
-                            <button class="btn btn-sm btn-outline" style="flex:1; min-width: 100px;" onclick="rateSeller(${order.id}, '${order.sellerName}')">
-                                <i class="fas fa-star" style="color: #f59e0b;"></i> Rate Seller
-                            </button>
                             ${order.isTicketSent ? `
                                 <button class="btn btn-sm btn-primary" style="flex:1; min-width: 100px; text-align:center;" onclick="downloadTicket(${ticket.id})">
                                     <i class="fas fa-download"></i> View Ticket
@@ -157,99 +154,5 @@ window.downloadTicket = async function(ticketId) {
     } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
-    }
-};
-
-window.rateSeller = async function(orderId, sellerName) {
-    const { value: formValues } = await Swal.fire({
-        title: `Rate ${sellerName}`,
-        html:
-            '<div style="margin-bottom: 15px;">' +
-            '<label style="display:block; margin-bottom:10px; color:#aaa;">How was your experience?</label>' +
-            '<div id="swal-rating" style="font-size: 2rem; color: #444; cursor: pointer; display: flex; justify-content: center; gap: 10px;">' +
-            '<i class="fas fa-star" data-rating="1"></i>' +
-            '<i class="fas fa-star" data-rating="2"></i>' +
-            '<i class="fas fa-star" data-rating="3"></i>' +
-            '<i class="fas fa-star" data-rating="4"></i>' +
-            '<i class="fas fa-star" data-rating="5"></i>' +
-            '</div>' +
-            '</div>' +
-            '<textarea id="swal-comment" class="swal2-textarea" placeholder="Add a comment (optional)..." style="background:#1e1e1e; color:#fff; border:1px solid #333;"></textarea>',
-        focusConfirm: false,
-        background: '#18181b',
-        color: '#fff',
-        showCancelButton: true,
-        confirmButtonText: 'Submit Review',
-        confirmButtonColor: '#3b82f6',
-        didOpen: () => {
-            const stars = document.querySelectorAll('#swal-rating i');
-            let currentRating = 0;
-            stars.forEach(star => {
-                star.addEventListener('mouseover', () => {
-                    const r = star.getAttribute('data-rating');
-                    stars.forEach(s => s.style.color = s.getAttribute('data-rating') <= r ? '#f59e0b' : '#444');
-                });
-                star.addEventListener('click', () => {
-                    currentRating = star.getAttribute('data-rating');
-                    stars.forEach(s => s.style.color = s.getAttribute('data-rating') <= currentRating ? '#f59e0b' : '#444');
-                    window.swalRatingValue = currentRating;
-                });
-            });
-            document.getElementById('swal-rating').addEventListener('mouseleave', () => {
-                stars.forEach(s => s.style.color = s.getAttribute('data-rating') <= currentRating ? '#f59e0b' : '#444');
-            });
-        },
-        preConfirm: () => {
-            const rating = window.swalRatingValue;
-            const comment = document.getElementById('swal-comment').value;
-            if (!rating) {
-                Swal.showValidationMessage('Please select a rating');
-                return false;
-            }
-            return { rating, comment };
-        }
-    });
-
-    if (formValues) {
-        try {
-            const res = await fetch(TA.restUrl + '/reviews', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-WP-Nonce': TA.nonce
-                },
-                body: JSON.stringify({
-                    orderId: orderId,
-                    rating: formValues.rating,
-                    comment: formValues.comment
-                })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                Swal.fire({
-                    title: 'Thank You!',
-                    text: 'Your review has been submitted.',
-                    icon: 'success',
-                    timer: 2000,
-                    showConfirmButton: false,
-                    background: '#18181b', color: '#fff'
-                });
-            } else {
-                Swal.fire({
-                    title: 'Error',
-                    text: data.message || 'Could not save review.',
-                    icon: 'error',
-                    background: '#18181b', color: '#fff'
-                });
-            }
-        } catch (err) {
-            console.error(err);
-            Swal.fire({
-                title: 'Error',
-                text: 'Network error. Please try again.',
-                icon: 'error',
-                background: '#18181b', color: '#fff'
-            });
-        }
     }
 };

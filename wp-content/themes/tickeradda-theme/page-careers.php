@@ -5,7 +5,7 @@
 get_header();
 ?>
 <main id="main">
-    <section class="section" style="padding-top: 100px;">
+    <section class="section">
         <div class="container" style="text-align: center;">
             <h1 class="gradient-text" style="font-size: 4rem; margin-bottom: 20px;">Join the Team</h1>
             <p style="color: var(--text-gray); max-width: 600px; margin: 0 auto 50px;">We're building the future of ticket resale in India. Come be a part of it!</p>

@@ -12,13 +12,17 @@
 
     /* Responsive Spacing */
     --section-pad-x: 20px;
-    --section-pad-y: 80px;
+    --section-pad-y: 60px;
+    --header-height: 80px;
+    --banner-height: 48px;
 }
 
 @media (max-width: 768px) {
     :root {
         --section-pad-x: 16px;
         --section-pad-y: 40px;
+        --header-height: 70px;
+        --banner-height: 90px;
     }
 }
 
@@ -36,6 +40,11 @@ body {
     color: var(--text-white);
     overflow-x: hidden;
     min-height: 100vh;
+    padding-top: var(--header-height);
+}
+
+body.has-kyc-banner {
+    padding-top: calc(var(--header-height) + var(--banner-height));
 }
 
 a {
@@ -321,7 +330,7 @@ ul {
 }
 
 .has-kyc-banner .hero {
-    padding-top: 160px;
+    padding-top: 60px; /* Reduced since body already adds 128px */
 }
 
 .hero-content {

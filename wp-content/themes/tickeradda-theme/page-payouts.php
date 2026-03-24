@@ -6,7 +6,7 @@ get_header();
 ?>
 
 <main id="main">
-    <section class="section" style="padding-top: 50px;">
+    <section class="section">
         <div class="container">
             <div style="margin-bottom: 20px;">
                 <a href="<?php echo home_url('/seller-dashboard/'); ?>" style="color: var(--color-text-muted); text-decoration: none;">
@@ -18,14 +18,10 @@ get_header();
                 <p style="color: var(--color-text-muted);">Manage your sales revenue and track payout status.</p>
             </div>
 
-            <div class="grid grid-3" style="margin-bottom: 40px;">
+            <div class="grid grid-2" style="margin-bottom: 40px;">
                 <div class="card">
-                    <div style="color: var(--text-gray); margin-bottom: 10px;">Total Revenue (Gross)</div>
+                    <div style="color: var(--text-gray); margin-bottom: 10px;">Total Earnings (Gross)</div>
                     <div style="font-size: 28px; font-weight: 700; color: #fff;" id="totalRevenue">₹0</div>
-                </div>
-                <div class="card">
-                    <div style="color: var(--text-gray); margin-bottom: 10px;">Platform Fees (5%)</div>
-                    <div style="font-size: 28px; font-weight: 700; color: #ef4444;" id="totalFees">- ₹0</div>
                 </div>
                 <div class="card" style="border-bottom: 3px solid #10B981;">
                     <div style="color: var(--text-gray); margin-bottom: 10px;">Net Settlement</div>
@@ -41,7 +37,6 @@ get_header();
                             <th style="padding: 15px;">Date</th>
                             <th style="padding: 15px;">Event</th>
                             <th style="padding: 15px;">Amount</th>
-                            <th style="padding: 15px;">Fee</th>
                             <th style="padding: 15px;">Net Payout</th>
                             <th style="padding: 15px;">Status</th>
                         </tr>
@@ -80,22 +75,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         let html = '';
 
         if (soldTickets.length === 0) {
-            html = '<tr><td colspan="6" style="padding: 40px; text-align: center; color: var(--text-gray);">No settlements found yet. Sell your first ticket to see payouts!</td></tr>';
+            html = '<tr><td colspan="5" style="padding: 40px; text-align: center; color: var(--text-gray);">No settlements found yet. Sell your first ticket to see payouts!</td></tr>';
         } else {
             soldTickets.forEach(t => {
                 const amount = t.price * t.quantity;
-                const fee = Math.ceil(amount * 0.05);
-                const net = amount - fee;
+                const net = amount;
                 
                 totalRev += amount;
-                totalFee += fee;
 
                 html += `
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <td style="padding: 15px; color: #aaa;">${new Date(t.createdAt).toLocaleDateString()}</td>
                     <td style="padding: 15px; font-weight: 500;">${t.event}</td>
                     <td style="padding: 15px;">₹${amount}</td>
-                    <td style="padding: 15px; color: #ef4444;">- ₹${fee}</td>
                     <td style="padding: 15px; color: #10B981; font-weight: 600;">₹${net}</td>
                     <td style="padding: 15px;"><span class="badge badge-warning">Processing</span></td>
                 </tr>`;
@@ -103,8 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         document.getElementById('totalRevenue').textContent = '₹' + totalRev.toLocaleString();
-        document.getElementById('totalFees').textContent = '- ₹' + totalFee.toLocaleString();
-        document.getElementById('netSettlement').textContent = '₹' + (totalRev - totalFee).toLocaleString();
+        document.getElementById('netSettlement').textContent = '₹' + (totalRev).toLocaleString();
         document.getElementById('payoutsTable').innerHTML = html;
 
     } catch (err) {

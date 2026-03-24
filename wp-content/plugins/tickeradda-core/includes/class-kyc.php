@@ -54,7 +54,7 @@ class TA_KYC {
 
         // Only sellers (or admins) can submit KYC
         $user = wp_get_current_user();
-        if ( ! in_array( 'ta_seller', (array) $user->roles, true ) && ! current_user_can( 'manage_options' ) ) {
+        if ( ! TA_Roles::user_has_role( $user, 'seller' ) ) {
             return new WP_Error( 'forbidden', 'Only sellers can submit KYC.', array( 'status' => 403 ) );
         }
 

@@ -31,14 +31,49 @@ function initStickyNavbar() {
 document.addEventListener('DOMContentLoaded', function () {
     initStickyNavbar();
     setupMobileMenu(); 
-    checkAuthStatus();
+    checkAuthStatus(); // Initial check from TA/LocalStorage
+    syncAuth(); // Background sync to bypass HTML cache
 
     // Fill user initials if badge exists
     if (TA.loggedIn && TA.user) {
         const initials = document.querySelectorAll('.user-initials');
         initials.forEach(el => el.textContent = (TA.user.name || 'U').charAt(0).toUpperCase());
+
+        // Mandatory Phone check (especially for Google users)
+        if (TA.user.isPhoneRequired && !sessionStorage.getItem('phone_prompt_dismissed')) {
+            // Wait a second to not overwhelm immediately on load
+            setTimeout(promptForPhone, 1500);
+        }
     }
 });
+
+async function syncAuth() {
+    try {
+        // Fetch fresh status from REST API (cache-busted automatically by our fetch interceptor)
+        const res = await fetch(TA.restUrl + '/auth/me');
+        if (!res.ok) return;
+        
+        const freshUser = await res.json();
+        const isLoggedInNow = !!(freshUser && freshUser.id);
+        
+        // If status changed or user data differs, force UI update
+        if (isLoggedInNow !== TA.loggedIn || JSON.stringify(freshUser) !== JSON.stringify(TA.user)) {
+            console.log('[TA Sync] Auth status changed or stale. Hydrating UI...');
+            TA.loggedIn = isLoggedInNow;
+            TA.user = freshUser;
+            
+            // Re-run status checks
+            checkAuthStatus();
+            
+            // If we just found out we are logged in, maybe show phone prompt
+            if (isLoggedInNow && TA.user.isPhoneRequired && !sessionStorage.getItem('phone_prompt_dismissed')) {
+                setTimeout(promptForPhone, 1000);
+            }
+        }
+    } catch (err) {
+        console.warn('[TA Sync] Failed to sync auth status:', err);
+    }
+}
 
 function setupMobileMenu() {
     const navLinks = document.querySelector('.nav-links');
@@ -61,19 +96,30 @@ function setupMobileMenu() {
 function checkAuthStatus() {
     // Priority: WordPress Session (TA) -> LocalStorage (Legacy/Sync)
     const user = TA.user || JSON.parse(localStorage.getItem('user'));
+    
+    // Update dashboard links if we have them
+    const dashboardLink = document.getElementById('dashboardLink');
+    if (dashboardLink) dashboardLink.style.display = TA.loggedIn ? 'inline-block' : 'none';
+    const myTicketsLink = document.getElementById('myTicketsLink');
+    if (myTicketsLink) myTicketsLink.style.display = TA.loggedIn ? 'inline-block' : 'none';
+
+    const navLinks = document.getElementById('navLinks') || document.querySelector('.nav-links');
     const loginBtn = document.getElementById('loginBtn') || document.querySelector('.nav-links a[href*="login"]');
     
-    if (TA.loggedIn && user && loginBtn) {
-        loginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
-        loginBtn.href = '#';
-        loginBtn.classList.remove('btn-outline');
-        loginBtn.classList.add('btn-primary');
-        loginBtn.onclick = (e) => {
-            e.preventDefault();
-            logout();
-        };
+    if (TA.loggedIn && user) {
+        // If loginBtn exists (meaning HTML was cached as logged-out), transform it to logout
+        if (loginBtn && !loginBtn.classList.contains('btn-logout')) {
+            loginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
+            loginBtn.href = '#';
+            loginBtn.classList.remove('btn-outline');
+            loginBtn.classList.add('btn-primary', 'btn-logout');
+            loginBtn.onclick = (e) => {
+                e.preventDefault();
+                logout();
+            };
+        }
 
-        const navLinks = document.getElementById('navLinks') || document.querySelector('.nav-links');
+        // Handle userBadge (Profile)
         if (navLinks && !document.getElementById('userBadge')) {
             const userBadge = document.createElement('div');
             userBadge.id = 'userBadge';
@@ -82,33 +128,30 @@ function checkAuthStatus() {
             userBadge.style.alignItems = 'center';
             userBadge.style.gap = '10px';
             userBadge.style.cursor = 'default';
-            // Only add margin-right on desktop
-            if (window.innerWidth > 768) {
-                userBadge.style.marginRight = '15px';
-            }
+            if (window.innerWidth > 768) userBadge.style.marginRight = '15px';
             
             const initials = (user.name || 'U').charAt(0).toUpperCase();
             userBadge.innerHTML = `
-                <div style="width: 38px; height: 38px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; border: 2px solid rgba(255,255,255,0.1); box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); flex-shrink: 0;">${initials}</div>
-                <div style="display: flex; flex-direction: column; line-height: 1.1; justify-content: center;">
-                    <span style="font-weight: 600; font-size: 0.85rem; color: #fff; white-space: nowrap;">${(user.name || 'User').split(' ')[0]}</span>
-                    <span style="font-size: 0.75rem; color: #f59e0b; display: flex; align-items: center; gap: 4px;">
-                        <i class="fas fa-star" style="font-size: 0.7rem;"></i> ${user.averageRating || 0}
-                    </span>
+                <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="window.location.href='${TA.homeUrl}seller-dashboard/'">
+                    <span class="user-name-header" style="color: white; font-weight: 600; font-size: 0.95rem;">${user.name}</span>
+                    <div style="width: 38px; height: 38px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; border: 2px solid rgba(255,255,255,0.1); box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); flex-shrink: 0;">${initials}</div>
                 </div>
             `;
-            navLinks.insertBefore(userBadge, loginBtn);
+            // Insert before login/logout button
+            if (loginBtn) {
+                navLinks.insertBefore(userBadge, loginBtn);
+            } else {
+                navLinks.appendChild(userBadge);
+            }
             
-            // Re-check width on resize
             window.addEventListener('resize', () => {
                 userBadge.style.marginRight = window.innerWidth > 768 ? '15px' : '0';
             });
 
-            // Sync legacy storage
             localStorage.setItem('user', JSON.stringify(user));
         }
 
-        // Show relevant dashboard links (Unified role: everyone sees both sets of links)
+        // Show relevant dashboard links
         const dashboardLinks = document.querySelectorAll('.dashboard-link');
         dashboardLinks.forEach(link => {
             link.style.display = 'inline-block';
@@ -116,7 +159,6 @@ function checkAuthStatus() {
                 link.href = TA.homeUrl + 'wp-admin/admin.php?page=tickeradda';
                 link.innerHTML = '<i class="fas fa-tachometer-alt"></i> Admin';
             } else {
-                // By default show seller dashboard link for the main dashboard button
                 link.href = TA.homeUrl + 'seller-dashboard/';
             }
         });
@@ -130,11 +172,12 @@ function requireAuth() {
 }
 
 async function logout() {
+    // Clear all storage
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     sessionStorage.clear();
     
-    // Redirect to WP Logout
+    // Nonce for logout is special
     window.location.href = TA.homeUrl + 'wp-login.php?action=logout&_wpnonce=' + TA.nonce + '&redirect_to=' + encodeURIComponent(TA.homeUrl);
 }
 
@@ -154,7 +197,8 @@ async function buyTicket(ticketId, price) {
     if (!TA.loggedIn) {
         Swal.fire({
             title: 'Login Required',
-            text: 'You need to login to buy tickets!',
+            text: 'You need to login to request tickets!',
+
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Login Now'
@@ -215,3 +259,59 @@ function getIcon(type) {
     return icons[type] || 'calendar-star';
 }
 
+async function promptForPhone() {
+    const { value: phone } = await Swal.fire({
+        title: 'Mobile Number Required',
+        text: 'Please provide your 10-digit mobile number to continue. This is mandatory for selling tickets.',
+        input: 'tel',
+        inputLabel: 'Mobile Number',
+        inputPlaceholder: 'e.g. 9876543210',
+        background: '#18181b', color: '#fff',
+        confirmButtonText: 'Save Number',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        inputValidator: (value) => {
+            if (!value || value.length < 10) {
+                return 'Please enter a valid 10-digit number!';
+            }
+        }
+    });
+
+    if (phone) {
+        sessionStorage.setItem('phone_prompt_dismissed', '1'); // Don't ask again this session
+        try {
+            const res = await fetch(TA.restUrl + '/auth/phone', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-WP-Nonce': TA.nonce
+                },
+                body: JSON.stringify({ phone })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                Swal.fire({
+                    title: 'Saved!',
+                    text: 'Your number has been updated.',
+                    icon: 'success',
+                    background: '#18181b', color: '#fff'
+                }).then(() => {
+                    TA.user.phone = phone;
+                    TA.user.isPhoneRequired = false;
+                    // If on sell page, it might need reload
+                    if (window.location.href.includes('sell-ticket')) {
+                        location.reload();
+                    }
+                });
+            } else {
+                Swal.fire('Error', data.message || 'Failed to update phone number.', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            Swal.fire('Error', 'Server error.', 'error');
+        }
+    } else {
+        // If they cancelled or closed without value (though allowOutsideClick is false)
+        sessionStorage.setItem('phone_prompt_dismissed', '1');
+    }
+}

@@ -5,7 +5,7 @@
 get_header();
 ?>
 <main id="main">
-    <section class="section" style="padding-top: 100px;">
+    <section class="section">
         <div class="container" style="max-width: 800px;">
             <h1 class="gradient-text" style="font-size: 3rem; margin-bottom: 20px; text-align: center;">Contact Us</h1>
             <p style="text-align: center; color: var(--text-gray); margin-bottom: 40px;">Have questions? We're here to help.</p>

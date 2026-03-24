@@ -62,6 +62,12 @@ class TA_Tickets {
             'permission_callback' => array( $this, 'is_admin' ),
         ) );
 
+        register_rest_route( $ns, '/tickets/(?P<id>\d+)/seller-status', array(
+            'methods'             => 'PUT',
+            'callback'            => array( $this, 'seller_update_ticket_status' ),
+            'permission_callback' => 'is_user_logged_in',
+        ) );
+
         register_rest_route( $ns, '/tickets/secure-image/(?P<id>\d+)', array(
             'methods'             => 'GET',
             'callback'            => array( $this, 'serve_ticket_image' ),
@@ -79,6 +85,18 @@ class TA_Tickets {
             'callback'            => array( $this, 'get_event_tickets' ),
             'permission_callback' => '__return_true',
         ) );
+
+        register_rest_route( $ns, '/tickets/(?P<id>\d+)', array(
+            'methods'             => 'DELETE',
+            'callback'            => array( $this, 'delete_ticket_admin' ),
+            'permission_callback' => array( $this, 'is_admin' ),
+        ) );
+
+        register_rest_route( $ns, '/tickets/(?P<id>\d+)/unsold', array(
+            'methods'             => 'PUT',
+            'callback'            => array( $this, 'mark_unsold_admin' ),
+            'permission_callback' => array( $this, 'is_admin' ),
+        ) );
     }
 
     // ── Permission Callbacks ──────────────────────────────────────────────────
@@ -89,8 +107,7 @@ class TA_Tickets {
     public function is_seller_or_admin() {
         if ( ! is_user_logged_in() ) return false;
         $user = wp_get_current_user();
-        return in_array( 'ta_seller', (array) $user->roles, true )
-            || current_user_can( 'manage_options' );
+        return TA_Roles::user_has_role( $user, 'seller' );
     }
 
     // ── POST /tickets ─────────────────────────────────────────────────────────
@@ -411,14 +428,15 @@ class TA_Tickets {
         return rest_ensure_response( array_map( array( $this, 'format_ticket' ), $tickets ) );
     }
 
-    // ── PUT /tickets/(?P<id>\d+)/status ──────────────────────────────────────
+    // ── PUT /tickets/(?P<id>\d+)/status (Admin) ──────────────────────────────
     public function update_ticket_status( WP_REST_Request $request ) {
         global $wpdb;
         $id     = TA_Security::clean_int( $request->get_param( 'id' ) );
         $status = TA_Security::clean( $request->get_param( 'status' ) );
         $table  = TA_Database::tickets_table();
+        $is_unlisted = $request->get_param( 'is_unlisted' );
 
-        $allowed = array( 'approved', 'rejected', 'pending', 'available' );
+        $allowed = array( 'approved', 'rejected', 'pending', 'available', 'sold' );
         if ( ! in_array( $status, $allowed, true ) ) {
             return new WP_Error( 'invalid_status', 'Invalid status value.', array( 'status' => 400 ) );
         }
@@ -433,7 +451,12 @@ class TA_Tickets {
             return new WP_Error( 'not_found', 'Ticket not found.', array( 'status' => 404 ) );
         }
 
-        $wpdb->update( $table, array( 'status' => $status ), array( 'id' => $id ), array( '%s' ), array( '%d' ) );
+        $data = array( 'status' => $status, 'updated_at' => current_time( 'mysql' ) );
+        if ( $is_unlisted !== null ) {
+            $data['is_unlisted'] = (int) $is_unlisted;
+        }
+
+        $wpdb->update( $table, $data, array( 'id' => $id ) );
 
         // Send notification email to seller
         if ( $ticket->seller_email && in_array( $status, array( 'approved', 'rejected' ), true ) ) {
@@ -445,7 +468,40 @@ class TA_Tickets {
             );
         }
 
-        return rest_ensure_response( array( 'msg' => "Ticket status updated to {$status}." ) );
+        return rest_ensure_response( array( 'success' => true, 'message' => "Ticket status updated to {$status}." ) );
+    }
+
+    // ── PUT /tickets/(?P<id>\d+)/seller-status (Seller) ──────────────────────
+    public function seller_update_ticket_status( WP_REST_Request $request ) {
+        global $wpdb;
+        $id      = TA_Security::clean_int( $request->get_param( 'id' ) );
+        $status  = TA_Security::clean( $request->get_param( 'status' ) );
+        $user_id = get_current_user_id();
+        $table   = TA_Database::tickets_table();
+
+        // Sellers can only mark as 'sold', 'available', or 'rejected' (cancelled)
+        $allowed = array( 'available', 'sold', 'rejected' );
+        if ( ! in_array( $status, $allowed, true ) ) {
+            return new WP_Error( 'invalid_status', 'Permission denied for this status.', array( 'status' => 403 ) );
+        }
+
+        $ticket = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE id = %d AND seller_id = %d", $id, $user_id ) );
+        if ( ! $ticket ) {
+            return new WP_Error( 'not_found', 'Ticket not found or access denied.', array( 'status' => 404 ) );
+        }
+
+        // If marking as sold, we also ensure is_unlisted is 0 so it stays in history but maybe hidden from listings
+        // However, the user specifically said "event list pe sold option aa jayega", which means it SHOULD show on the event page.
+        $data = array( 'status' => $status, 'updated_at' => current_time( 'mysql' ) );
+        if ( $status === 'sold' ) {
+            $data['is_unlisted'] = 0; // Keep visible as "SOLD" on event page
+        } elseif ( $status === 'available' ) {
+            $data['is_unlisted'] = 0;
+        }
+
+        $wpdb->update( $table, $data, array( 'id' => $id, 'seller_id' => $user_id ) );
+
+        return rest_ensure_response( array( 'success' => true, 'message' => "Ticket marked as {$status}." ) );
     }
 
     // ── GET /tickets/secure-image/(?P<id>\d+) ────────────────────────────────
@@ -499,6 +555,36 @@ class TA_Tickets {
         exit;
     }
 
+    public function delete_ticket_admin( WP_REST_Request $request ) {
+        global $wpdb;
+        $id = (int) $request->get_param('id');
+        $tickets_table = TA_Database::tickets_table();
+        $orders_table  = TA_Database::orders_table();
+
+        $wpdb->delete( $orders_table, array( 'ticket_id' => $id ), array( '%d' ) );
+        $deleted = $wpdb->delete( $tickets_table, array( 'id' => $id ), array( '%d' ) );
+
+        if ( $deleted ) {
+            return rest_ensure_response( array( 'success' => true, 'message' => 'Ticket and associated orders deleted.' ) );
+        }
+        return new WP_Error( 'delete_failed', 'Could not delete ticket.', array( 'status' => 500 ) );
+    }
+
+    public function mark_unsold_admin( WP_REST_Request $request ) {
+        global $wpdb;
+        $id = (int) $request->get_param('id');
+        $tickets_table = TA_Database::tickets_table();
+        $orders_table  = TA_Database::orders_table();
+
+        $updated = $wpdb->update( $tickets_table, array( 'status' => 'approved' ), array( 'id' => $id ), array( '%s' ), array( '%d' ) );
+        $wpdb->delete( $orders_table, array( 'ticket_id' => $id, 'status' => 'completed' ), array( '%d', '%s' ) );
+
+        if ( $updated !== false ) {
+            return rest_ensure_response( array( 'success' => true, 'message' => 'Ticket marked as unsold and orders reverted.' ) );
+        }
+        return new WP_Error( 'update_failed', 'Could not update ticket status.', array( 'status' => 500 ) );
+    }
+
     // ── Format helper ─────────────────────────────────────────────────────────
     private function format_ticket( $t ) {
         if ( ! $t ) return null;
@@ -514,14 +600,11 @@ class TA_Tickets {
                 'name'           => esc_html( $t->seller_name ?? '' ),
                 'email'          => esc_html( $t->seller_email ?? '' ),
                 'phone'          => esc_html( $t->seller_phone ?? '' ),
-                'averageRating'  => (float) ( $t->seller_avg_rating ?? 0 ),
-                'ratingsCount'   => (int) ( $t->seller_ratings_count ?? 0 ),
             ),
             'sellerName'     => esc_html( $t->seller_name ?? '' ),
             'sellerEmail'    => esc_html( $t->seller_email ?? '' ),
             'sellerPhone'    => esc_html( $t->seller_phone ?? '' ),
-            'avgRating'      => (float) ( $t->seller_avg_rating ?? 0 ),
-            'ratingsCount'   => (int) ( $t->seller_ratings_count ?? 0 ),
+
             'price'          => (float) $t->price,
             'quantity'       => (int) $t->quantity,
             'section'        => esc_html( $t->section ?? '' ),

@@ -57,7 +57,9 @@ add_action( 'wp_enqueue_scripts', function() {
         'page-movies.php'           => 'public/movies.js',
         'page-sports.php'           => 'public/sports.js',
         'page-theatre.php'          => 'public/theatre.js',
+        'page-play.php'             => 'public/play.js',
         'page-buy-ticket.php'       => 'public/buy-ticket.js',
+
         'page-order-success.php'    => 'public/order-success.js',
         'page-login.php'            => 'auth/login.js',
         'page-register.php'         => 'auth/signup.js',
@@ -77,27 +79,40 @@ add_action( 'wp_enqueue_scripts', function() {
         wp_enqueue_script( 'ta-page-js', $uri . '/assets/js/' . $js_map[ $template ], array( 'ta-common' ), $v, false );
     }
 
+    // Direct check for "virtual" category pages to ensure scripts load even on 404/conflict
+    $path = trim( $_SERVER['REQUEST_URI'], '/' );
+    if ( strpos( $path, 'movies' ) !== false ) {
+        wp_enqueue_script( 'ta-movies-js', $uri . '/assets/js/public/movies.js', array( 'ta-common' ), $v, false );
+    } elseif ( strpos( $path, 'sports' ) !== false ) {
+        wp_enqueue_script( 'ta-sports-js', $uri . '/assets/js/public/sports.js', array( 'ta-common' ), $v, false );
+    } elseif ( strpos( $path, 'theatre' ) !== false ) {
+        wp_enqueue_script( 'ta-theatre-js', $uri . '/assets/js/public/theatre.js', array( 'ta-common' ), $v, false );
+    } elseif ( strpos( $path, 'play' ) !== false ) {
+        wp_enqueue_script( 'ta-play-js', $uri . '/assets/js/public/play.js', array( 'ta-common' ), $v, false );
+    }
+
     if ( is_post_type_archive( 'events' ) ) {
         wp_enqueue_script( 'ta-events-archive-js', $uri . '/assets/js/public/events.js', array( 'ta-common' ), $v, true );
     }
 
-    // Pass data to JS to override API URLs and verify nonces
+    // Pass data...
+
     $current_user_data = null;
     if ( is_user_logged_in() ) {
         $user = wp_get_current_user();
         $roles = $user->roles;
-        $role  = 'buyer';
+        $role  = 'both';
         if ( in_array( 'administrator', $roles, true ) ) $role = 'admin';
-        elseif ( in_array( 'ta_both', $roles, true ) ) $role = 'both';
-        elseif ( in_array( 'ta_seller', $roles, true ) )  $role = 'seller';
 
+        $phone = get_user_meta( $user->ID, 'ta_phone', true );
         $current_user_data = array(
-            'id'        => $user->ID,
-            'name'      => $user->display_name,
-            'email'     => $user->user_email,
-            'role'      => $role,
-            'phone'     => get_user_meta( $user->ID, 'ta_phone', true ),
-            'kycStatus' => get_user_meta( $user->ID, 'ta_kyc_status', true ) ?: 'not_submitted',
+            'id'              => $user->ID,
+            'name'            => $user->display_name,
+            'email'           => $user->user_email,
+            'role'            => $role,
+            'phone'           => $phone,
+            'isPhoneRequired' => empty( $phone ),
+            'kycStatus'       => get_user_meta( $user->ID, 'ta_kyc_status', true ) ?: 'not_submitted',
         );
     }
 
@@ -174,3 +189,78 @@ add_filter( 'rest_authentication_errors', function( $result ) {
 // Clean WP Head
 remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
 remove_action( 'wp_print_styles', 'print_emoji_styles' );
+
+// ── Category Page Setup ─────────────────────────────────────────────────────
+add_action( 'init', function() {
+    $pages_to_create = array(
+        'movies'       => array( 'title' => 'Movies',       'template' => 'page-movies.php' ),
+        'sports'       => array( 'title' => 'Sports',       'template' => 'page-sports.php' ),
+        'theatre'      => array( 'title' => 'Theatre',      'template' => 'page-theatre.php' ),
+        'play'         => array( 'title' => 'Play',         'template' => 'page-play.php' ),
+        'debug-status' => array( 'title' => 'Debug Status', 'template' => 'debug-status.php' ),
+    );
+
+    foreach ( $pages_to_create as $slug => $data ) {
+        if ( ! get_page_by_path( $slug ) ) {
+            $page_id = wp_insert_post( array(
+                'post_title'   => $data['title'],
+                'post_name'    => $slug,
+                'post_status'  => 'publish',
+                'post_type'    => 'page',
+            ) );
+            if ( $page_id ) update_post_meta( $page_id, '_wp_page_template', $data['template'] );
+        } else {
+            // Ensure template is correct even if page existed
+            $page = get_page_by_path( $slug );
+            update_post_meta( $page->ID, '_wp_page_template', $data['template'] );
+        }
+    }
+
+    // Force flush rewrite rules once more
+    if ( get_option( 'ta_permalinks_flushed' ) < 2 ) {
+        flush_rewrite_rules();
+        update_option( 'ta_permalinks_flushed', 2 );
+    }
+} );
+
+// Script Enqueueing
+add_action( 'wp_enqueue_scripts', function() {
+    $uri = get_template_directory_uri();
+    $v   = '1.0.3';
+    
+    if ( is_page('movies') || is_post_type_archive('movies') ) {
+        wp_enqueue_script( 'ta-movies-js', $uri . '/assets/js/public/movies.js', array( 'ta-common' ), $v, true );
+    }
+    if ( is_page('sports') || is_post_type_archive('sports_events') ) {
+        wp_enqueue_script( 'ta-sports-js', $uri . '/assets/js/public/sports.js', array( 'ta-common' ), $v, true );
+    }
+    if ( is_page('theatre') ) {
+        wp_enqueue_script( 'ta-theatre-js', $uri . '/assets/js/public/theatre.js', array( 'ta-common' ), $v, true );
+    }
+    if ( is_page('play') ) {
+        wp_enqueue_script( 'ta-play-js', $uri . '/assets/js/public/play.js', array( 'ta-common' ), $v, true );
+    }
+}, 30 );
+
+
+// 4. Force Script Enqueueing
+add_action( 'wp_enqueue_scripts', function() {
+    $uri = get_template_directory_uri();
+    $v   = '1.0.2';
+    $path = trim( parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ), '/' );
+    $parts = explode('/', $path);
+    $slug = end($parts);
+
+    if ( $slug === 'movies' ) {
+        wp_enqueue_script( 'ta-movies-js', $uri . '/assets/js/public/movies.js', array( 'ta-common' ), $v, true );
+    } elseif ( $slug === 'sports' ) {
+        wp_enqueue_script( 'ta-sports-js', $uri . '/assets/js/public/sports.js', array( 'ta-common' ), $v, true );
+    } elseif ( $slug === 'theatre' ) {
+        wp_enqueue_script( 'ta-theatre-js', $uri . '/assets/js/public/theatre.js', array( 'ta-common' ), $v, true );
+    } elseif ( $slug === 'play' ) {
+        wp_enqueue_script( 'ta-play-js', $uri . '/assets/js/public/play.js', array( 'ta-common' ), $v, true );
+    }
+}, 30 );
+
+
+

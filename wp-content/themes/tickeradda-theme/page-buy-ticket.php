@@ -6,7 +6,7 @@ get_header();
 ?>
 
 <main id="main">
-<section class="section" style="padding-top: 120px;">
+<section class="section">
         <div class="container" style="max-width: 800px;">
             <a href="#" onclick="history.back()"
                 style="color: var(--text-gray); text-decoration: none; margin-bottom: 20px; display: inline-block;">
@@ -70,10 +70,7 @@ get_header();
                         </div>
                         <div>
                             <h4 id="sellerName" style="margin: 0; font-size: 1.1rem; color: #fff;">Seller Name</h4>
-                            <div id="sellerRating" style="margin-top: 5px; color: #f59e0b; font-size: 0.9rem;">
-                                <i class="fas fa-star"></i> 4.5 <span style="color: var(--text-gray);">(0
-                                    reviews)</span>
-                            </div>
+
                         </div>
                         <div style="margin-left: auto;">
                             <span class="badge badge-success"><i class="fas fa-check-circle"></i> Verified</span>
@@ -89,12 +86,21 @@ get_header();
                         </div>
                     </div>
                 </div>
-                <div class="card" style="padding: 30px;">
-                    <h3>Payment Summary</h3>
+                <div class="card" style="padding: 30px; border: 2px solid var(--primary); background: rgba(59, 130, 246, 0.05);">
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <span class="badge badge-primary" style="font-size: 1rem; padding: 8px 15px;">FREE SERVICE</span>
+                        <h3 style="margin-top: 15px; color: #fff;">TicketAdda is Free for now!</h3>
+                        <p style="color: var(--text-gray); font-size: 0.95rem;">You can enjoy the platform and contact the seller directly without any fees.</p>
+                    </div>
+
                     <div style="margin-top: 20px; border-top: 1px solid var(--glass-border); padding-top: 20px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                            <span>Ticket Price</span>
-                            <span id="summaryPrice">₹0</span>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                            <span style="color: var(--text-gray);">Ticket Price</span>
+                            <span id="summaryPrice" style="font-weight: 600;">₹0</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                            <span style="color: var(--text-gray);">Service Fee</span>
+                            <span style="color: #16a34a; font-weight: 600;">FREEE</span>
                         </div>
                         <div
                             style="display: flex; justify-content: space-between; margin-top: 20px; padding-top: 20px; border-top: 1px dashed var(--glass-border); font-size: 1.2rem; font-weight: bold;">
@@ -102,14 +108,16 @@ get_header();
                             <span id="summaryTotal" style="color: var(--primary);">₹0</span>
                         </div>
                     </div>
+
                     <button id="payBtn" class="btn btn-primary"
                         style="width: 100%; margin-top: 30px; padding: 15px; font-size: 1.1rem; background-color: #16a34a; border-color: #16a34a;">
-                        <i class="fas fa-handshake"></i> I have bought this ticket
+                        <i class="fas fa-phone-alt"></i> Contact Seller Directly
                     </button>
-                    <p style="text-align: center; margin-top: 15px; font-size: 0.8rem; color: var(--text-gray);">
-                        Clicking ensures the seller is notified. Please contact the seller directly to complete the transfer.
+                    <p style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: var(--text-gray);">
+                        TicketAdda is currently free. Please contact the seller directly to complete the transfer and payment.
                     </p>
                 </div>
+
             </div>
         </div>
     </section>

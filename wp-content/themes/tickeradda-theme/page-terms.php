@@ -5,7 +5,7 @@
 get_header();
 ?>
 <main id="main">
-    <section class="section" style="padding-top: 100px;">
+    <section class="section">
         <div class="container" style="max-width: 900px;">
             <h1 class="gradient-text" style="font-size: 3rem; margin-bottom: 30px;">Terms of Service</h1>
             <div class="content-block" style="color: #ccc; line-height: 1.8;">
@@ -18,7 +18,7 @@ get_header();
                 <p>All users must undergo Aadhaar KYC to list tickets. Sellers are responsible for the authenticity of the tickets they provide.</p>
 
                 <h3>3. Fees</h3>
-                <p>TickerAdda charges a platform fee (typically 5%) for each successful transaction to cover verification, security, and payment processing costs.</p>
+                <p>TickerAdda is currently a free-to-use platform. We do not charge any platform fees for successful transactions right now. Enjoy the full value for your tickets!</p>
 
                 <h3>4. Cancellation</h3>
                 <p>Once a purchase is confirmed, it is generally non-refundable unless the event is cancelled or the ticket is found to be invalid.</p>

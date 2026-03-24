@@ -1,15 +1,15 @@
 <?php
 /**
- * Template Name: Movies
- * Description: Movies archive Template
+ * Template Name: Plays
  */
 get_header();
 ?>
+
 <style>
-.movies-page-container { display:flex; gap:30px; align-items:flex-start; }
+.theatre-page-container { display:flex; gap:30px; align-items:flex-start; }
 
 /* Sidebar */
-.movies-sidebar {
+.theatre-sidebar {
     width:260px; flex-shrink:0;
     background:var(--card-bg);
     border:1px solid var(--glass-border);
@@ -37,12 +37,12 @@ get_header();
 }
 
 /* Header */
-.movies-header {
+.theatre-header {
     display:flex; justify-content:space-between;
     align-items:center; margin-bottom:25px; flex-wrap:wrap; gap:15px;
 }
-.movies-header h1 { font-size:2rem; margin:0; }
-.movies-sub-desc { color:var(--text-gray); font-size:1rem; margin-top:4px; }
+.theatre-header h1 { font-size:2rem; margin:0; }
+.theatre-sub-desc { color:var(--text-gray); font-size:1rem; margin-top:4px; }
 
 /* Active filter pills */
 .active-filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:15px; min-height:28px; }
@@ -63,11 +63,11 @@ get_header();
     color:#fff; padding:8px 14px; border-radius:10px; cursor:pointer;
 }
 
-.movies-main { flex:1; min-width:0; }
+.theatre-main { flex:1; min-width:0; }
 
 @media (max-width:900px) {
-    .movies-page-container { flex-direction:column; }
-    .movies-sidebar { width:100%; position:static; }
+    .theatre-page-container { flex-direction:column; }
+    .theatre-sidebar { width:100%; position:static; }
 }
 
 .search-input-wrap {
@@ -88,65 +88,69 @@ get_header();
     <section class="section" style="padding-bottom:60px;">
         <div class="container">
 
-            <div class="movies-page-container">
+            <div class="theatre-page-container">
                 <!-- ── Sidebar ──────────────────────────────── -->
-                <aside class="movies-sidebar">
-                    <h3 style="margin:0 0 20px; font-size:1.1rem; color:#fff;">Filter Movies</h3>
+                <aside class="theatre-sidebar">
+                    <h3 style="margin:0 0 20px; font-size:1.1rem; color:#fff;">Filter Plays</h3>
 
-                    <!-- Languages -->
+                    <!-- Type -->
                     <div class="filter-group">
-                        <h4>Languages</h4>
-                        <label class="filter-label"><input type="checkbox" class="lang-filter" value="hindi"> Hindi</label>
-                        <label class="filter-label"><input type="checkbox" class="lang-filter" value="english"> English</label>
-                        <label class="filter-label"><input type="checkbox" class="lang-filter" value="tamil"> Tamil</label>
-                        <label class="filter-label"><input type="checkbox" class="lang-filter" value="telugu"> Telugu</label>
+                        <h4>Category</h4>
+                        <label class="filter-label"><input type="checkbox" class="type-filter" value="play"> Plays</label>
+                        <label class="filter-label"><input type="checkbox" class="type-filter" value="drama"> Drama</label>
+                        <label class="filter-label"><input type="checkbox" class="type-filter" value="musical"> Musical</label>
                     </div>
 
-
-
-                    <!-- Certificate -->
+                    <!-- City -->
                     <div class="filter-group">
-                        <h4>Certificate</h4>
-                        <label class="filter-label"><input type="checkbox" class="cert-filter" value="U"> U</label>
-                        <label class="filter-label"><input type="checkbox" class="cert-filter" value="UA"> UA</label>
-                        <label class="filter-label"><input type="checkbox" class="cert-filter" value="A"> A</label>
+                        <h4>City</h4>
+                        <label class="filter-label"><input type="checkbox" class="city-filter" value="mumbai"> Mumbai</label>
+                        <label class="filter-label"><input type="checkbox" class="city-filter" value="delhi"> Delhi</label>
+                        <label class="filter-label"><input type="checkbox" class="city-filter" value="bangalore"> Bengaluru</label>
                     </div>
 
-                    <button id="clearFiltersBtn" class="btn btn-outline" style="width:100%;margin-top:8px;">
+                    <!-- Date -->
+                    <div class="filter-group">
+                        <h4>Date</h4>
+                        <input type="date" id="playDateFilter" style="width:100%;padding:8px 12px;background:var(--card-bg);border:1px solid var(--glass-border);border-radius:10px;color:#fff;outline:none;">
+                    </div>
+
+                    <button id="clearPlayFilters" class="btn btn-outline" style="width:100%;margin-top:8px;">
                         <i class="fas fa-times"></i> Clear All
                     </button>
                 </aside>
 
                 <!-- ── Main Content ─────────────────────────── -->
-                <div class="movies-main">
-                    <div class="movies-header">
+                <div class="theatre-main">
+                    <div class="theatre-header">
                         <div>
-                            <h1 class="gradient-text">Movies</h1>
-                            <p class="movies-sub-desc">Book verified movie tickets at the best prices</p>
+                            <h1 class="gradient-text">Plays & Performances</h1>
+                            <p class="theatre-sub-desc">Discover the best stage performances near you</p>
                         </div>
                         <div class="search-input-wrap">
-                            <input type="text" id="movieSearch" placeholder="Search movies...">
+                            <input type="text" id="playSearch" placeholder="Search plays...">
                             <i class="fas fa-search"></i>
                         </div>
                     </div>
 
-                    <div class="active-filters" id="activeFiltersContainer"></div>
+                    <div class="active-filters" id="playActiveFilters"></div>
 
                     <div class="sort-bar">
-                        <span style="color:var(--text-gray);font-size:0.9rem;" id="moviesResultCount">Loading...</span>
+                        <span style="color:var(--text-gray);font-size:0.9rem;" id="playResultCount">Loading...</span>
                         <div style="margin-left:auto;display:flex;align-items:center;gap:10px;">
                             <span style="color:var(--text-gray);font-size:0.9rem;">Sort by:</span>
-                            <select id="moviesSort">
-                                <option value="date_desc">Latest (Default)</option>
+                            <select id="playSort">
+                                <option value="date_asc">Date (Earliest)</option>
+                                <option value="date_desc">Date (Latest)</option>
                                 <option value="name_asc">Name (A-Z)</option>
                             </select>
                         </div>
                     </div>
 
-                    <div class="grid grid-3" id="moviesGrid">
+                    <div class="grid grid-3" id="playGrid">
                         <div style="grid-column:1/-1;text-align:center;padding:80px;color:var(--text-gray);">
                             <i class="fas fa-spinner fa-spin fa-3x" style="color:var(--primary);"></i>
-                            <p style="margin-top:20px;">Loading movies...</p>
+                            <p style="margin-top:20px;">Loading plays...</p>
                         </div>
                     </div>
                 </div>
@@ -157,4 +161,3 @@ get_header();
 </main>
 
 <?php get_footer(); ?>
-

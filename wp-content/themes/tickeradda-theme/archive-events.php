@@ -12,6 +12,14 @@ get_header();
             <p style="color: var(--text-gray); max-width: 600px; margin: 0 auto 30px;">
                 Browse verified tickets for the hottest concerts, matches, and shows.
             </p>
+            <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 12px; padding: 15px; max-width: 600px; margin: 0 auto 30px; display: flex; align-items: center; gap: 15px; justify-content: center;">
+                <i class="fas fa-gift" style="color: var(--primary); font-size: 1.5rem;"></i>
+                <div style="text-align: left;">
+                    <h4 style="margin: 0; color: #fff;">TicketAdda is Free for now!</h4>
+                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-gray);">Enjoy 0% service fees. You can contact the seller directly to buy tickets.</p>
+                </div>
+            </div>
+
             <div class="hero-categories" style="justify-content: center;">
                 <button class="category-pill filter-btn" data-category="all">All</button>
                 <button class="category-pill filter-btn" data-category="music">Music</button>

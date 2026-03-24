@@ -58,16 +58,11 @@ class TA_Roles {
         switch ( $role ) {
             case 'admin':
                 return in_array( 'administrator', (array) $user->roles, true );
-            case 'both':
-                return in_array( 'ta_both', (array) $user->roles, true )
-                    || in_array( 'administrator', (array) $user->roles, true );
             case 'seller':
-                return in_array( 'ta_seller', (array) $user->roles, true )
-                    || in_array( 'ta_both', (array) $user->roles, true )
-                    || in_array( 'administrator', (array) $user->roles, true );
             case 'buyer':
-                return in_array( 'ta_buyer', (array) $user->roles, true )
-                    || in_array( 'ta_seller', (array) $user->roles, true )
+            case 'both':
+                return in_array( 'ta_seller', (array) $user->roles, true )
+                    || in_array( 'ta_buyer', (array) $user->roles, true )
                     || in_array( 'ta_both', (array) $user->roles, true )
                     || in_array( 'administrator', (array) $user->roles, true );
             default:

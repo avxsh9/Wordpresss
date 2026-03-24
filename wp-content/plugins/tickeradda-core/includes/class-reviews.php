@@ -12,8 +12,11 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 class TA_Reviews {
 
     public function register_routes() {
+        // Ratings and reviews are no longer required as per user request
+        return;
+        
         $ns = TA_REST_NS;
-
+        /*
         register_rest_route( $ns, '/reviews', array(
             'methods'             => 'POST',
             'callback'            => array( $this, 'create_review' ),
@@ -25,6 +28,7 @@ class TA_Reviews {
             'callback'            => array( $this, 'get_seller_reviews' ),
             'permission_callback' => '__return_true',
         ) );
+        */
     }
 
     /**

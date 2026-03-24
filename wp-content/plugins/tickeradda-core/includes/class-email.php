@@ -147,6 +147,28 @@ class TA_Email {
         return self::send( $seller_email, $subject, $html );
     }
 
+    // ── Purchase Request Submitted — Notify Buyer ─────────────────────────────
+    public static function send_purchase_request_confirmation( $buyer_email, $buyer_name, $seller_name, $seller_email, $seller_phone, $ticket, $order_id ) {
+        $subject = "📨 Request Submitted: {$ticket->event_name}";
+        $amount  = '₹' . number_format( $ticket->price, 2 );
+
+        $html = self::base_template( $subject, "
+            <p>Hi {$buyer_name},</p>
+            <p>Your request to purchase the ticket for <strong>" . esc_html( $ticket->event_name ) . "</strong> has been submitted!</p>
+            <div style='background:#f0f9ff;border-radius:8px;padding:20px;margin:20px 0;border:1px solid #bae6fd;'>
+                <p><strong>Ticket Price:</strong> {$amount}</p>
+                <h4 style='margin-bottom:5px;'>Seller Contact Details:</h4>
+                <p style='margin:0;'><strong>Name:</strong> {$seller_name}</p>
+                <p style='margin:0;'><strong>Email:</strong> {$seller_email}</p>
+                <p style='margin:0;'><strong>Phone:</strong> {$seller_phone}</p>
+            </div>
+            <p>You can contact the seller directly via the details above or wait for them to reach out to you to complete the payment and transfer.</p>
+            <p>View your request status in your <a href='" . home_url('/buyer-dashboard-2') . "' style='color:#4f46e5;'>Buyer Dashboard</a>.</p>
+        " );
+
+        return self::send( $buyer_email, $subject, $html );
+    }
+
     // ── Sale Confirmed — Notify Buyer ─────────────────────────────────────────
     public static function send_sale_confirmed( $buyer_email, $buyer_name, $seller_name, $seller_email, $seller_phone, $ticket, $order ) {
         $order_id_s = '#' . str_pad( $order->id, 6, '0', STR_PAD_LEFT );

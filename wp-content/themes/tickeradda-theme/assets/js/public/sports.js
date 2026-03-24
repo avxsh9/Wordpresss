@@ -108,20 +108,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <img src="${event.image}" alt="${event.name}" loading="lazy" 
                                  onerror="this.src='https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=600&q=80'">
                             <div class="event-card-category">${(event.category || 'MOVIE').toUpperCase()}</div>
-                            <div class="event-card-rating"><i class="fas fa-star"></i> ${rating}</div>
-                        </div>
                         <div class="event-card-details">
                             <h3 class="event-card-title">${event.name}</h3>
-                            <h3 class="event-card-title movie-title">${event.name}</h3>
                             <div class="event-card-meta">
-                                <span class="movie-meta-badge"><i class="fas fa-star"></i> IMDb ${rating}</span>
                                 <span class="movie-meta-badge"><i class="fas fa-user-shield"></i> Rated ${cert}</span>
                             </div>
                         </div>
                         <div class="event-card-actions">
-                            <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'">Book Tickets</button>
+                            <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'"><i class="fas fa-ticket-alt"></i> Get For Free</button>
                             <button class="card-btn-secondary" onclick="event.stopPropagation(); window.location.href='${sellUrl}'">
-                                <i class="fas fa-ticket-alt"></i> Sell Your Tickets
+                                <i class="fas fa-plus-circle"></i> Sell Tickets
                             </button>
                         </div>
                     </div>
@@ -144,9 +140,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                     </div>
                     <div class="event-card-actions">
-                        <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'">Book Tickets</button>
+                        <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'"><i class="fas fa-ticket-alt"></i> Get For Free</button>
                         <button class="card-btn-secondary" onclick="event.stopPropagation(); window.location.href='${sellUrl}'">
-                            <i class="fas fa-ticket-alt"></i> Sell Your Tickets
+                            <i class="fas fa-plus-circle"></i> Sell Tickets
                         </button>
                     </div>
                 </div>

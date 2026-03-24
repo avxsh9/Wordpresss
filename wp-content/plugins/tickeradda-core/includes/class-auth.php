@@ -72,6 +72,12 @@ class TA_Auth {
             'permission_callback' => '__return_true',
         ) );
 
+        register_rest_route( $ns, '/auth/phone', array(
+            'methods'             => 'POST',
+            'callback'            => array( $this, 'update_phone' ),
+            'permission_callback' => 'is_user_logged_in',
+        ) );
+
         register_rest_route( $ns, '/users/featured', array(
             'methods'             => 'GET',
             'callback'            => array( $this, 'get_featured_sellers' ),
@@ -328,6 +334,19 @@ class TA_Auth {
         return rest_ensure_response( array( 'msg' => 'Logged out successfully.' ) );
     }
 
+    // ── POST /auth/phone ───────────────────────────────────────────────────────
+    public function update_phone( WP_REST_Request $request ) {
+        $phone = TA_Security::clean( $request->get_param( 'phone' ) );
+        if ( empty( $phone ) || strlen( $phone ) < 10 ) {
+            return new WP_Error( 'invalid_phone', 'Please provide a valid 10-digit phone number.', array( 'status' => 400 ) );
+        }
+
+        $user_id = get_current_user_id();
+        update_user_meta( $user_id, 'ta_phone', $phone );
+
+        return rest_ensure_response( array( 'message' => 'Phone number updated successfully.', 'phone' => $phone ) );
+    }
+
     // ── POST /auth/forgot-password ─────────────────────────────────────────────
     public function forgot_password( WP_REST_Request $request ) {
         $email = TA_Security::clean_email( $request->get_param( 'email' ) );
@@ -415,21 +434,23 @@ class TA_Auth {
     public static function user_response( $user_id ) {
         $user   = get_user_by( 'id', $user_id );
         $roles  = $user->roles;
-        $role   = 'buyer';
+        $role   = 'both';
         if ( in_array( 'administrator', $roles, true ) ) $role = 'admin';
-        elseif ( in_array( 'ta_both', $roles, true ) || in_array( 'ta_buyer', $roles, true ) || in_array( 'ta_seller', $roles, true ) ) $role = 'both';
+
+        $phone = get_user_meta( $user_id, 'ta_phone', true );
 
         return array(
-            'id'          => $user_id,
-            'name'        => esc_html( $user->display_name ),
-            'email'       => esc_html( $user->user_email ),
-            'phone'       => esc_html( get_user_meta( $user_id, 'ta_phone', true ) ),
-            'role'        => $role,
-            'kycStatus'   => esc_html( get_user_meta( $user_id, 'ta_kyc_status', true ) ?: 'not_submitted' ),
-            'banStatus'   => esc_html( get_user_meta( $user_id, 'ta_ban_status', true ) ?: 'none' ),
-            'avgRating'   => (float) get_user_meta( $user_id, 'ta_average_rating', true ),
-            'ratingsCount' => (int) get_user_meta( $user_id, 'ta_ratings_count', true ),
-            'createdAt'   => $user->user_registered,
+            'id'              => $user_id,
+            'name'            => esc_html( $user->display_name ),
+            'email'           => esc_html( $user->user_email ),
+            'phone'           => esc_html( $phone ),
+            'isPhoneRequired' => empty( $phone ),
+            'role'            => $role,
+            'kycStatus'       => esc_html( get_user_meta( $user_id, 'ta_kyc_status', true ) ?: 'not_submitted' ),
+            'banStatus'       => esc_html( get_user_meta( $user_id, 'ta_ban_status', true ) ?: 'none' ),
+            'avgRating'       => (float) get_user_meta( $user_id, 'ta_average_rating', true ),
+            'ratingsCount'    => (int) get_user_meta( $user_id, 'ta_ratings_count', true ),
+            'createdAt'       => $user->user_registered,
         );
     }
 

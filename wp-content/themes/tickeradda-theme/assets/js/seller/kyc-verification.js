@@ -16,8 +16,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (data.status === 'pending') {
             showStatus('pending', 'Verification Pending', 'Your documents are under review. This usually takes 24 hours.');
         } else if (data.status === 'approved') {
-            showStatus('approved', 'Verified', 'You are verified! You can now start selling tickets.');
-            setTimeout(() => window.location.href = TA.homeUrl + 'seller-dashboard/', 2000);
+            showStatus('approved', 'Verified', 'You are verified! Returning to home page...');
+            setTimeout(() => window.location.href = TA.homeUrl, 1500);
         } else if (data.status === 'rejected') {
             showStatus('rejected', 'Verification Failed', `Reason: ${data.rejectionReason || 'Documents invalid'}. Please resubmit.`);
             formContainer.style.display = 'block';
@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         background: '#18181b', color: '#fff',
                         confirmButtonColor: '#10b981'
                     }).then(() => {
-                        window.location.href = TA.homeUrl + 'seller-dashboard/';
+                        window.location.href = TA.homeUrl;
                     });
                 } else {
                     showAlert('Submission Failed', data.message || data.msg || 'Please try again', 'error');

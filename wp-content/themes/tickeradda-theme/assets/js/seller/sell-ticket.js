@@ -16,30 +16,55 @@ document.addEventListener('DOMContentLoaded', () => {
     setupManualListing();
 
     async function checkKycStatus() {
+        console.log('[KYC Check] Initiating verification status check...');
         try {
-            const res = await fetch(TA.restUrl + '/kyc/status', {
+            const res = await fetch(TA.restUrl + '/auth/me', {
                 headers: { 'X-WP-Nonce': TA.nonce }
             });
-            const data = await res.json();
-            if (data.status !== 'approved') {
+            const user = await res.json();
+            
+            // First check: Phone Number (Mandatory for Google users)
+            if (user.isPhoneRequired && !sessionStorage.getItem('phone_prompt_dismissed')) {
                 Swal.fire({
-                    title: 'KYC Required',
-                    text: 'You must complete KYC verification before listing tickets.',
+                    title: 'Phone Number Required',
+                    text: 'You must provide a mobile number before you can list tickets.',
                     icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Verify Now',
-                    confirmButtonColor: '#3b82f6',
-                    background: '#18181b', color: '#fff'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = TA.homeUrl + 'kyc-verification/';
+                    confirmButtonText: 'Provide Now',
+                    background: '#18181b', color: '#fff',
+                    allowOutsideClick: false
+                }).then(() => {
+                    if (typeof promptForPhone === 'function') {
+                        promptForPhone().then(() => location.reload());
                     } else {
-                        window.location.href = TA.homeUrl + "seller-dashboard/";
+                        window.location.href = TA.homeUrl + 'seller-dashboard/';
                     }
                 });
+                return;
             }
+
+            // Second check: KYC Status
+            if (user.kycStatus === 'approved') {
+                console.log('[KYC Check] User is verified. Proceeding to listing.');
+                return;
+            }
+
+            Swal.fire({
+                title: 'KYC Required',
+                text: user.kycStatus === 'pending' ? 'Your KYC is still under review. Please wait for approval.' : 'You must complete KYC verification before listing tickets.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: user.kycStatus === 'pending' ? 'View Status' : 'Verify Now',
+                confirmButtonColor: '#3b82f6',
+                background: '#18181b', color: '#fff'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = TA.homeUrl + 'kyc-verification/';
+                } else {
+                    window.location.href = TA.homeUrl + "seller-dashboard/";
+                }
+            });
         } catch (err) {
-            console.error('KYC Check Error:', err);
+            console.error('[KYC Check] Error:', err);
         }
     }
 

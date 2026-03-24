@@ -39,7 +39,7 @@ get_header();
 }
 </style>
 <main id="main">
-<section class="section" style="padding-top:40px;">
+<section class="section">
     <div class="container">
         <div class="kyc-container">
             <div style="margin-bottom: 20px;">
@@ -75,9 +75,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         c.innerHTML = `<div class="alert alert-success" style="text-align:center; padding: 40px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px;">
             <i class="fas fa-check-circle" style="font-size: 3rem; display:block; margin-bottom:15px; color: #10B981;"></i>
             <h3>KYC Approved!</h3>
-            <p>You can now list your tickets for sale.</p>
-            <a href="<?php echo esc_url(home_url('/sell-ticket/')); ?>" class="btn btn-primary" style="margin-top:20px; display: inline-block;">Sell Tickets</a>
+            <p>You are verified! Returning to home page...</p>
         </div>`;
+        setTimeout(() => window.location.href = TA.homeUrl, 1500);
         return;
     }
     if (status.status === 'pending') {
@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             suc.textContent = '✅ KYC submitted! Admin will review within 24 hours.';
             suc.style.display = 'block';
-            setTimeout(() => location.reload(), 2000);
+            setTimeout(() => window.location.href = TA.homeUrl, 2000);
         } catch (e) {
             err.textContent = e.message;
             err.style.display = 'block';

@@ -6,7 +6,7 @@ get_header();
 ?>
 
 <main id="main">
-    <section class="section" style="padding-top: 50px;">
+    <section class="section">
         <div class="container">
             <div style="margin-bottom: 20px;">
                 <a href="<?php echo home_url('/buyer-dashboard/'); ?>" style="color: var(--color-text-muted); text-decoration: none;">

@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const moviesGrid     = document.getElementById('homeMoviesGrid');
     const theatreGrid    = document.getElementById('homeTheatreGrid');
     const moreGrid       = document.getElementById('homeMoreEventsGrid');
-    const sellersGrid    = document.getElementById('featuredSellersGrid');
+
 
     const trendingPills = document.querySelectorAll('.hero-categories .category-pill');
     const sportsPills   = document.querySelectorAll('.sports-section .category-pill-small');
@@ -43,19 +43,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         };
 
-        const [events, sellers] = await Promise.all([
-            fetchJSON(`${TA.restUrl}/events-list?per_page=100`),
-            fetchJSON(`${TA.restUrl}/users/featured`)
-        ]);
+        const events = await fetchJSON(`${TA.restUrl}/events-list?per_page=100`);
 
         allEventsCached = Array.isArray(events) ? events : [];
-        const featuredSellers = Array.isArray(sellers) ? sellers : [];
-
-        console.log(`TickerAdda Home: Loaded ${allEventsCached.length} events, ${featuredSellers.length} sellers.`);
+        console.log(`TickerAdda Home: Loaded ${allEventsCached.length} events.`);
 
         // ── 3. Initial Distribution & Render ───────────────────────────
         distributeAndRender();
-        renderSellersGrid(sellersGrid, featuredSellers);
 
         // ── 4. Reactive Trending section pills ─────────────────────────
         trendingPills.forEach(pill => {
@@ -157,12 +151,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <img src="${event.image}" alt="${event.name}" loading="lazy" 
                                  onerror="this.src='https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=600&q=80'">
                             <div class="event-card-category">NOW SHOWING</div>
-                            <div class="event-card-rating"><i class="fas fa-star"></i> ${rating}</div>
                         </div>
                         <div class="event-card-details">
                             <h3 class="event-card-title movie-title">${event.name}</h3>
                             <div class="event-card-meta">
-                                <span class="movie-meta-badge"><i class="fas fa-star"></i> IMDb ${rating}</span>
                                 <span class="movie-meta-badge"><i class="fas fa-user-shield"></i> Rated ${cert}</span>
                             </div>
                         </div>
@@ -202,26 +194,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         }).join('');
     }
 
-    function renderSellersGrid(container, sellers) {
-        if (!container) return;
-        if (!sellers || sellers.length === 0) {
-            container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#aaa;">No featured sellers at the moment.</div>';
-            return;
-        }
-        container.innerHTML = Array.isArray(sellers) ? sellers.map(seller => `
-            <div class="card" style="text-align:center;padding:25px; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 20px;">
-                <div style="width:60px;height:60px;background:linear-gradient(135deg,#3b82f6,#2563eb);border-radius:50%;margin:0 auto 15px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:bold;color:#fff;box-shadow:0 0 20px rgba(59,130,246,0.2);">
-                    ${seller.name.charAt(0).toUpperCase()}
-                </div>
-                <h4 style="margin:0 0 5px;color:#fff;">${seller.name}</h4>
-                <div style="color:#f59e0b;font-size:0.9rem;margin-bottom:15px;">
-                    <i class="fas fa-star"></i> ${seller.avgRating || 0}
-                    <span style="color:#aaa;font-size:0.8rem;">(${seller.ratingsCount || 0})</span>
-                </div>
-                <div style="font-size:0.8rem;color:#10B981;background:rgba(16,185,129,0.1);padding:4px 10px;border-radius:20px;display:inline-block;">
-                    Verified Seller
-                </div>
-            </div>
-        `).join('') : '';
-    }
+
 });

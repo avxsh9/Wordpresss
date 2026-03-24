@@ -288,11 +288,22 @@ class TA_Events {
 
         $args = array(
             'post_type'      => array( 'events', 'movies', 'sports_events' ),
-            'posts_per_page' => $per_page,
+            'posts_per_page' => -1,
             'post_status'    => 'publish',
             'orderby'        => 'meta_value',
             'meta_key'       => 'event_date',
             'order'          => 'ASC',
+            'meta_query'     => array(
+                'relation' => 'OR',
+                array(
+                    'key'     => 'event_date',
+                    'compare' => 'EXISTS',
+                ),
+                array(
+                    'key'     => 'event_date',
+                    'compare' => 'NOT EXISTS',
+                ),
+            ),
         );
 
         if ($category && $category !== 'all') {
@@ -304,6 +315,7 @@ class TA_Events {
                 ),
             );
         }
+
 
         if ($search) {
             $args['s'] = $search;

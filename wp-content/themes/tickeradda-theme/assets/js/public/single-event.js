@@ -44,22 +44,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     <div class="seller-mini-info" style="display: flex; align-items: center; gap: 10px; font-size: 0.8rem; color: #888;">
                         <span>Seller: <strong>${ticket.sellerName || 'Verified Seller'}</strong></span>
-                        <span style="color: #ffc107;">
-                            ${getRatingStars(ticket.avgRating)} 
-                            <span style="color: #888; margin-left: 4px;">(${ticket.ratingsCount || 0})</span>
-                        </span>
                     </div>
                 </div>
                 
                 <div class="ticket-cta" style="text-align: right; border-left: 1px solid rgba(255,255,255,0.05); padding-left: 30px;">
                     <div style="font-size: 1.5rem; font-weight: 800; color: ${ticket.status === 'sold' ? '#ef4444' : 'var(--primary)'}; margin-bottom: 5px;">₹${ticket.price.toLocaleString()}</div>
-                    <div style="font-size: 0.75rem; color: #888; margin-bottom: 15px;">per ticket</div>
+                    <div style="font-size: 0.75rem; color: #16a34a; margin-bottom: 15px; font-weight: 600;"><i class="fas fa-check-circle"></i> No service fee</div>
                     ${ticket.status === 'sold' ? `
                         <button class="btn btn-danger btn-sm" disabled style="width: 100%; border-radius: 8px; cursor: not-allowed; opacity: 0.8;"><i class="fas fa-ban"></i> Sold Out</button>
                     ` : `
-                        <button class="btn btn-primary btn-sm buy-btn" data-id="${ticket.id}" style="width: 100%; border-radius: 8px;"><i class="fas fa-ticket-alt"></i> Request to Buy</button>
+                        <button class="btn btn-primary btn-sm buy-btn" data-id="${ticket.id}" style="width: 100%; border-radius: 8px;"><i class="fas fa-phone-alt"></i> Request For Free / Get Seller Details</button>
                     `}
                 </div>
+
             </div>
         `).join('');
 
@@ -77,18 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
         badge.textContent = count === 1 ? '1 ticket available' : `${count} tickets available`;
     }
 
-    function getRatingStars(rating) {
-        let stars = '';
-        const full = Math.floor(rating);
-        const half = rating % 1 >= 0.5;
-        
-        for (let i = 0; i < 5; i++) {
-            if (i < full) stars += '<i class="fas fa-star"></i>';
-            else if (i === full && half) stars += '<i class="fas fa-star-half-alt"></i>';
-            else stars += '<i class="far fa-star"></i>';
-        }
-        return stars;
-    }
+
 
     loadTickets();
 });

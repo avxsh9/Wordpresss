@@ -41,15 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const initials = (ticket.seller.name || 'V').split(' ').map(n => n[0]).join('').toUpperCase();
                 if (sInitialsEl) sInitialsEl.textContent = initials.substring(0, 2);
                 
-                const sRatingEl = document.getElementById('sellerRating');
-                const rating = ticket.seller.averageRating ? ticket.seller.averageRating.toFixed(1) : 'New';
-                const count = ticket.seller.ratingsCount || 0;
-                if (sRatingEl) {
-                    sRatingEl.innerHTML = `
-                        <i class="fas fa-star"></i> ${rating} 
-                        <span style="color: var(--text-gray);">(${count} reviews)</span>
-                    `;
-                }
+
             }
             
             setupPayment(ticket);
@@ -98,12 +90,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 if (!res.ok) throw new Error(data.message || 'Failed to submit request');
 
+                const seller = data.seller || {};
+                const sellerHtml = `
+                    <div style="margin-top:20px; padding:15px; background:rgba(255,255,255,0.05); border-radius:10px; text-align:left; border:1px solid rgba(255,255,255,0.1);">
+                        <h4 style="margin:0 0 10px; color:#3b82f6; font-size:1rem; border-bottom:1px solid rgba(59,130,246,0.2); padding-bottom:5px;">Seller Contact Details</h4>
+                        <p style="margin:5px 0;"><strong>Name:</strong> ${seller.name || 'N/A'}</p>
+                        <p style="margin:5px 0;"><strong>Email:</strong> <a href="mailto:${seller.email}" style="color:#93c5fd;">${seller.email || 'N/A'}</a></p>
+                        <p style="margin:5px 0;"><strong>Phone:</strong> <a href="tel:${seller.phone}" style="color:#93c5fd;">${seller.phone || 'N/A'}</a></p>
+                        <p style="margin:10px 0 0; font-size:0.8rem; color:#888; font-style:italic;">You can also find these details in your Buyer Dashboard.</p>
+                    </div>
+                `;
+
                 Swal.fire({
                     title: 'Request Sent!',
-                    text: 'The seller has been notified of your interest. Once they confirm, you will receive an email with their contact details to arrange payment!',
+                    html: `
+                        <p>The seller has been notified of your interest.</p>
+                        ${sellerHtml}
+                        <p style="margin-top:15px;">You have also received an email with these details.</p>
+                    `,
                     icon: 'success',
                     background: '#18181b', color: '#fff',
-                    confirmButtonColor: '#16a34a'
+                    confirmButtonColor: '#16a34a',
+                    confirmButtonText: 'Go to Dashboard'
                 }).then(() => {
                     window.location.href = TA.homeUrl + 'buyer-dashboard-2/';
                 });

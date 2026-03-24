@@ -20,7 +20,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        let html = '';
+        let activeHtml = '';
+        let soldHtml = '';
+        const tableBody = document.getElementById('listingsTable');
+        const soldTableBody = document.getElementById('soldTable');
+        
         let totalEarnings = 0;
         let activeCount = 0;
         let soldCount = 0;
@@ -32,48 +36,69 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (ticket.status === 'sold') {
                 soldCount += ticket.quantity;
                 const saleValue = ticket.price * ticket.quantity;
-                const platformFee = Math.ceil(saleValue * 0.05);
-                const netEarnings = saleValue - platformFee;
+                const netEarnings = saleValue;
                 totalEarnings += netEarnings;
                 statusBadge = '<span class="badge badge-success">SOLD</span>';
-                actionHtml = `
-                    <div style="font-size: 0.8em; color: #10B981;">
-                        <div>Sold to: <strong>${ticket.buyerName || 'Buyer'}</strong></div>
-                        <div><i class="fas fa-phone"></i> ${ticket.buyerPhone || 'N/A'}</div>
-                    </div>`;
-            } else if (ticket.status === 'approved') {
-                activeCount++;
-                statusBadge = '<span class="badge badge-success">Active</span>';
-                actionHtml = '<button class="btn btn-sm btn-outline-danger" onclick="cancelListing(' + ticket.id + ')">Cancel</button>';
-            } else if (ticket.status === 'rejected') {
-                statusBadge = '<span class="badge badge-danger">Rejected</span>';
-                actionHtml = '-';
+                
+                soldHtml += `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); color: #ddd;">
+                        <td style="padding: 15px;" data-label="Event">
+                            <div style="font-weight:600; color:white;">${ticket.event}</div>
+                            <div style="font-size:0.8em; color:#888;">${ticket.category} | Sect: ${ticket.section || '-'}</div>
+                        </td>
+                        <td style="padding: 15px;" data-label="Date">${new Date(ticket.eventDate).toLocaleDateString()}</td>
+                        <td style="padding: 15px; font-weight:bold; color:white;" data-label="Quantity">${ticket.quantity}</td>
+                        <td style="padding: 15px;" data-label="Earnings">
+                            <div style="color:#10B981; font-weight:bold;">₹${netEarnings}</div>
+                        </td>
+                        <td style="padding: 15px;" data-label="Status">${statusBadge}</td>
+                        <td style="padding: 15px;" data-label="Buyer">
+                            <div style="font-size: 0.9em; color: white;">${ticket.buyerName || 'Buyer'}</div>
+                            <div style="font-size: 0.8em; color: #888;"><i class="fas fa-phone"></i> ${ticket.buyerPhone || 'N/A'}</div>
+                        </td>
+                    </tr>
+                `;
             } else {
-                activeCount++;
-                statusBadge = '<span class="badge badge-warning">Pending</span>';
-                actionHtml = '<button class="btn btn-sm btn-outline-danger" onclick="cancelListing(' + ticket.id + ')">Cancel</button>';
-            }
+                if (ticket.status === 'approved' || ticket.status === 'available') {
+                    activeCount++;
+                    statusBadge = '<span class="badge badge-success">Active</span>';
+                    actionHtml = `
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn btn-sm btn-success" onclick="updateListingStatus(${ticket.id}, 'sold')" title="Mark as Sold"><i class="fas fa-check"></i> Sold</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="cancelListing(${ticket.id})">Cancel</button>
+                        </div>`;
+                } else if (ticket.status === 'rejected') {
+                    statusBadge = '<span class="badge badge-danger">Rejected/Cancelled</span>';
+                    actionHtml = `<button class="btn btn-sm btn-outline-primary" onclick="updateListingStatus(${ticket.id}, 'available')">List Again</button>`;
+                } else {
+                    activeCount++;
+                    statusBadge = '<span class="badge badge-warning">Pending</span>';
+                    actionHtml = '<button class="btn btn-sm btn-outline-danger" onclick="cancelListing(' + ticket.id + ')">Cancel</button>';
+                }
 
-            html += `
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); color: #ddd;">
-                    <td style="padding: 15px;" data-label="Event">
-                        <div style="font-weight:600; color:white;">${ticket.event}</div>
-                        <div style="font-size:0.8em; color:#aaa;">${new Date(ticket.eventDate).toLocaleDateString()} ${ticket.eventTime}</div>
-                        <div style="font-size:0.8em; color:#888;">${ticket.category} | Sect: ${ticket.section || '-'}</div>
-                    </td>
-                    <td style="padding: 15px;" data-label="Date">${new Date(ticket.createdAt).toLocaleDateString()}</td>
-                    <td style="padding: 15px; font-weight:bold; color:white;" data-label="Quantity">${ticket.quantity}</td>
-                    <td style="padding: 15px;" data-label="Price">
-                        <div style="color:white;">₹${ticket.price}<span style="font-size:0.8em; color:#888;">/tkt</span></div>
-                        ${ticket.quantity > 1 ? `<div style="font-size:0.8rem; color:#aaa;">Total: ₹${ticket.price * ticket.quantity}</div>` : ''}
-                    </td>
-                    <td style="padding: 15px;" data-label="Status">${statusBadge}</td>
-                    <td style="padding: 15px;" data-label="Action">${actionHtml}</td>
-                </tr>
-            `;
+                activeHtml += `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); color: #ddd;">
+                        <td style="padding: 15px;" data-label="Event">
+                            <div style="font-weight:600; color:white;">${ticket.event}</div>
+                            <div style="font-size:0.8em; color:#aaa;">${new Date(ticket.eventDate).toLocaleDateString()} ${ticket.eventTime}</div>
+                            <div style="font-size:0.8em; color:#888;">${ticket.category} | Sect: ${ticket.section || '-'}</div>
+                        </td>
+                        <td style="padding: 15px;" data-label="Date">${new Date(ticket.createdAt).toLocaleDateString()}</td>
+                        <td style="padding: 15px; font-weight:bold; color:white;" data-label="Quantity">${ticket.quantity}</td>
+                        <td style="padding: 15px;" data-label="Price">
+                            <div style="color:white;">₹${ticket.price}<span style="font-size:0.8em; color:#888;">/tkt</span></div>
+                            ${ticket.quantity > 1 ? `<div style="font-size:0.8rem; color:#aaa;">Total: ₹${ticket.price * ticket.quantity}</div>` : ''}
+                        </td>
+                        <td style="padding: 15px;" data-label="Status">${statusBadge}</td>
+                        <td style="padding: 15px;" data-label="Action">${actionHtml}</td>
+                    </tr>
+                `;
+            }
         });
 
-        tableBody.innerHTML = html;
+        if (activeHtml) tableBody.innerHTML = activeHtml;
+        if (soldHtml) soldTableBody.innerHTML = soldHtml;
+        
         if (totalEarningsEl) totalEarningsEl.innerText = `₹${totalEarnings}`;
         if (activeListingsEl) activeListingsEl.innerText = activeCount;
         if (ticketsSoldEl) ticketsSoldEl.innerText = soldCount;
@@ -86,8 +111,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function cancelListing(id) {
     const result = await Swal.fire({
-        title: 'Are you sure?',
-        text: "This will remove your ticket listing from the marketplace.",
+        title: 'Cancel Listing?',
+        text: "This will remove your ticket from the marketplace.",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Yes, cancel it!',
@@ -96,24 +121,34 @@ async function cancelListing(id) {
     });
 
     if (result.isConfirmed) {
-        try {
-            const res = await fetch(TA.restUrl + `/tickets/${id}/status`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-WP-Nonce': TA.nonce
-                },
-                body: JSON.stringify({ status: 'rejected' }) // Or a deleted status if implemented
-            });
-            if (res.ok) {
-                showAlert('Cancelled', 'Your listing has been removed.', 'success');
-                location.reload();
-            } else {
-                showAlert('Error', 'Failed to cancel listing.', 'error');
-            }
-        } catch (err) {
-            console.error(err);
-            showAlert('Error', 'Server error.', 'error');
+        updateListingStatus(id, 'rejected');
+    }
+}
+
+async function updateListingStatus(id, newStatus) {
+    try {
+        const res = await fetch(TA.restUrl + `/tickets/${id}/seller-status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-WP-Nonce': TA.nonce
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+        
+        const data = await res.json();
+        if (res.ok) {
+            Swal.fire({
+                title: 'Success',
+                text: data.message || `Status updated to ${newStatus}.`,
+                icon: 'success',
+                background: '#18181b', color: '#fff'
+            }).then(() => location.reload());
+        } else {
+            Swal.fire('Error', data.message || 'Failed to update status.', 'error');
         }
+    } catch (err) {
+        console.error(err);
+        Swal.fire('Error', 'Server error.', 'error');
     }
 }

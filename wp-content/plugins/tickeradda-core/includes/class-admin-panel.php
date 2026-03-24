@@ -13,6 +13,52 @@ class TA_Admin_Panel {
         add_action( 'admin_post_ta_save_settings', array( $this, 'save_settings' ) );
         add_action( 'admin_post_ta_ban_user',       array( $this, 'ban_user_action' ) );
         add_action( 'admin_post_ta_unban_user',     array( $this, 'unban_user_action' ) );
+
+        // Standard user list extensions
+        add_filter( 'manage_users_columns',         array( $this, 'add_phone_column' ) );
+        add_action( 'manage_users_custom_column',    array( $this, 'fill_phone_column' ), 10, 3 );
+        
+        // User profile extensions
+        add_action( 'show_user_profile',            array( $this, 'add_phone_field_to_profile' ) );
+        add_action( 'edit_user_profile',            array( $this, 'add_phone_field_to_profile' ) );
+        add_action( 'personal_options_update',      array( $this, 'save_phone_field' ) );
+        add_action( 'edit_user_profile_update',     array( $this, 'save_phone_field' ) );
+    }
+
+    // Standard Users List Column
+    public function add_phone_column( $columns ) {
+        $columns['ta_phone'] = 'Phone';
+        return $columns;
+    }
+
+    public function fill_phone_column( $value, $column_name, $user_id ) {
+        if ( 'ta_phone' === $column_name ) {
+            return get_user_meta( $user_id, 'ta_phone', true ) ?: '-';
+        }
+        return $value;
+    }
+
+    // Profile Page Field
+    public function add_phone_field_to_profile( $user ) {
+        ?>
+        <h3>TickerAdda Info</h3>
+        <table class="form-table">
+            <tr>
+                <th><label for="ta_phone">Phone Number</label></th>
+                <td>
+                    <input type="text" name="ta_phone" id="ta_phone" value="<?php echo esc_attr( get_user_meta( $user->ID, 'ta_phone', true ) ); ?>" class="regular-text" />
+                    <p class="description">User's mobile number for ticket transactions.</p>
+                </td>
+            </tr>
+        </table>
+        <?php
+    }
+
+    public function save_phone_field( $user_id ) {
+        if ( ! current_user_can( 'edit_user', $user_id ) ) return false;
+        if ( isset( $_POST['ta_phone'] ) ) {
+            update_user_meta( $user_id, 'ta_phone', sanitize_text_field( $_POST['ta_phone'] ) );
+        }
     }
 
     // ── Register Admin Menu ────────────────────────────────────────────────────
@@ -161,6 +207,15 @@ class TA_Admin_Panel {
                         <button class="button button-small ta-approve-btn" data-id="<?php echo esc_attr($t->id); ?>">✓ Approve</button>
                         <button class="button button-small ta-reject-btn"  data-id="<?php echo esc_attr($t->id); ?>">✕ Reject</button>
                         <?php endif; ?>
+
+                        <?php if ( $t->status === 'sold' ) : ?>
+                         <button class="button button-small ta-unsold-btn" data-id="<?php echo esc_attr($t->id); ?>" style="background:#f59e0b; color:#fff; border-color:#f59e0b;">⟲ Unsold</button>
+                        <?php endif; ?>
+
+                        <button class="button button-small ta-delete-ticket-btn" data-id="<?php echo esc_attr($t->id); ?>" style="background:#f43f5e; color:#fff; border-color:#f43f5e;">
+                            <span class="dashicons dashicons-trash" style="vertical-align: middle; font-size: 14px; margin-top: -2px;"></span>
+                        </button>
+
                         <?php if ( $t->file_url ) : ?>
                         <a href="<?php echo esc_url( add_query_arg( '_wpnonce', wp_create_nonce( 'wp_rest' ), rest_url( TA_REST_NS . '/tickets/secure-image/' . $t->id ) ) ); ?>"
                            target="_blank" class="button button-small">View Proof</a>
@@ -191,6 +246,26 @@ class TA_Admin_Panel {
             });
             document.querySelectorAll('.ta-reject-btn').forEach(btn => {
                 btn.addEventListener('click', () => updateStatus(btn.dataset.id, 'rejected'));
+            });
+
+            document.querySelectorAll('.ta-delete-ticket-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (!confirm('PERMANENTLY delete this ticket and ALL its orders?')) return;
+                    fetch(rest + '/tickets/' + btn.dataset.id, {
+                        method: 'DELETE',
+                        headers: { 'X-WP-Nonce': nonce }
+                    }).then(r => r.json()).then(() => location.reload());
+                });
+            });
+
+            document.querySelectorAll('.ta-unsold-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (!confirm('Revert this ticket to Approved and remove the sale?')) return;
+                    fetch(rest + '/tickets/' + btn.dataset.id + '/unsold', {
+                        method: 'PUT',
+                        headers: { 'X-WP-Nonce': nonce }
+                    }).then(r => r.json()).then(() => location.reload());
+                });
             });
         });
         </script>
@@ -548,7 +623,7 @@ class TA_Admin_Panel {
                     </tr>
                     <tr>
                         <th>Platform Fee (%)</th>
-                        <td><input type="number" step="0.1" name="ta_platform_fee" value="<?php echo esc_attr( get_option('ta_platform_fee','5') ); ?>" class="small-text"> %</td>
+                        <td><input type="number" step="0.1" name="ta_platform_fee" value="<?php echo esc_attr( get_option('ta_platform_fee','0') ); ?>" class="small-text"> %</td>
                     </tr>
                     <tr>
                         <th>Support Email</th>
@@ -574,7 +649,7 @@ class TA_Admin_Panel {
         }
         update_option( 'ta_razorpay_key_id',     sanitize_text_field( $_POST['ta_razorpay_key_id'] ?? '' ) );
         update_option( 'ta_razorpay_key_secret',  sanitize_text_field( $_POST['ta_razorpay_key_secret'] ?? '' ) );
-        update_option( 'ta_platform_fee',         (float) ( $_POST['ta_platform_fee'] ?? 5 ) );
+        update_option( 'ta_platform_fee',         (float) ( $_POST['ta_platform_fee'] ?? 0 ) );
         update_option( 'ta_support_email',         sanitize_email( $_POST['ta_support_email'] ?? '' ) );
         wp_redirect( admin_url( 'admin.php?page=tickeradda-settings&saved=1' ) );
         exit;

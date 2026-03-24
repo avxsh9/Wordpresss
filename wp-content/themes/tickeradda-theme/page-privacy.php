@@ -5,7 +5,7 @@
 get_header();
 ?>
 <main id="main">
-    <section class="section" style="padding-top: 100px;">
+    <section class="section">
         <div class="container" style="max-width: 900px;">
             <h1 class="gradient-text" style="font-size: 3rem; margin-bottom: 30px;">Privacy Policy</h1>
             <div class="content-block" style="color: #ccc; line-height: 1.8;">

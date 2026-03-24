@@ -6,7 +6,7 @@ get_header();
 ?>
 
 <main id="main">
-<section class="section" style="padding-top: 100px;">
+<section class="section">
         <div class="container">
             <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 40px;">
                 <div>

@@ -195,19 +195,6 @@ get_header();
         </div>
     </section>
 
-    <!-- Top Sellers -->
-    <section class="section featured-sellers" style="background: rgba(255,255,255,0.02);">
-        <div class="container">
-            <div class="section-header" style="justify-content: center; text-align: center;">
-                <div class="section-title">
-                    <h2>Top Rated Sellers</h2>
-                    <p>Trusted by thousands of fans</p>
-                </div>
-            </div>
-            <div class="grid grid-4" id="featuredSellersGrid">
-                <p style="grid-column: 1/-1; text-align: center; color: var(--text-gray);">Loading top sellers...</p>
-            </div>
-        </div>
-    </section>
+
 </main>
 <?php get_footer(); ?>

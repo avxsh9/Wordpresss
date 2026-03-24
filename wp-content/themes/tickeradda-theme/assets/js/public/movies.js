@@ -29,18 +29,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function applyFilters() {
         const langs    = getFilterValues('lang-filter');
-        const ratings  = getFilterValues('rating-filter');
         const certs    = getFilterValues('cert-filter');
         const query    = (searchInput?.value || '').toLowerCase().trim();
 
         let filtered = allMovies.filter(event => {
             const combined = (event.name + ' ' + (event.location||'') + ' ' + (event.description||'')).toLowerCase();
             const matchLang   = langs.length === 0 || langs.some(l => (event.movieLanguage||'').toLowerCase().includes(l.toLowerCase()));
-            const matchRating = ratings.length === 0 || ratings.some(r => parseFloat(event.movieRating || '8.0') >= parseFloat(r));
             const matchCert   = certs.length === 0 || certs.some(c => (event.movieCert || 'UA').toUpperCase().includes(c.toUpperCase()));
             const matchQuery  = query === '' || combined.includes(query);
 
-            return matchLang && matchRating && matchCert && matchQuery;
+            return matchLang && matchCert && matchQuery;
         });
 
         const sort = sortSelect ? sortSelect.value : 'date_desc';
@@ -51,7 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return 0;
         });
 
-        renderActivePills(langs, ratings.map(r => r + '+ Rating'), certs);
+        renderActivePills(langs, certs);
         if (countEl) countEl.textContent = `${filtered.length} movie${filtered.length !== 1 ? 's' : ''} found`;
         renderMovies(filtered);
     }
@@ -83,21 +81,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <img src="${event.image}" alt="${event.name}" loading="lazy" 
                              onerror="this.src='https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=600&q=80'">
                         <div class="event-card-category">NOW SHOWING</div>
-                        <div class="event-card-rating"><i class="fas fa-star"></i> ${rating}</div>
                     </div>
                     <div class="event-card-details">
                         <h3 class="event-card-title movie-title">${event.name}</h3>
                         <div class="event-card-meta">
-                            <span class="movie-meta-badge"><i class="fas fa-star"></i> IMDb ${rating}</span>
                             <span class="movie-meta-badge"><i class="fas fa-user-shield"></i> Rated ${cert}</span>
                         </div>
                     </div>
-                    <div class="event-card-actions">
-                        <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'">Book Tickets</button>
-                        <button class="card-btn-secondary" onclick="event.stopPropagation(); window.location.href='${sellUrl}'">
-                            <i class="fas fa-ticket-alt"></i> Sell Your Tickets
-                        </button>
-                    </div>
+                        <div class="event-card-actions">
+                            <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'"><i class="fas fa-ticket-alt"></i> Get For Free</button>
+                            <button class="card-btn-secondary" onclick="event.stopPropagation(); window.location.href='${sellUrl}'">
+                                <i class="fas fa-plus-circle"></i> Sell Tickets
+                            </button>
+                        </div>
                 </div>
             `;
         }).join('');

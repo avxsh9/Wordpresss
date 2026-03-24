@@ -93,7 +93,7 @@ input[type="range"] {
 </style>
 
 <main id="main">
-    <section class="section" style="padding-top:120px; padding-bottom:60px;">
+    <section class="section" style="padding-bottom:60px;">
         <div class="container">
 
             <div class="sports-page-container">

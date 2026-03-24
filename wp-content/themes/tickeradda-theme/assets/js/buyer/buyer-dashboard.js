@@ -41,8 +41,13 @@ async function loadMyOrders() {
 }
 
 function renderOrderCard(order) {
-    const statusLabel = { pending: 'Pending', completed: 'Confirmed', cancelled: 'Cancelled' }[order.status] || order.status;
-    const statusClass = { pending: 'status-pending', completed: 'status-completed', cancelled: 'status-cancelled' }[order.status] || '';
+    let statusLabel = { pending: 'Pending', completed: 'Confirmed', cancelled: 'Cancelled' }[order.status] || order.status;
+    let statusClass = { pending: 'status-pending', completed: 'status-completed', cancelled: 'status-cancelled' }[order.status] || '';
+
+    if (order.ticketStatus === 'sold' && order.status === 'pending') {
+        statusLabel = 'SOLD';
+        statusClass = 'status-cancelled'; // Use red for sold tickets to buyer
+    }
 
     const date = order.eventDate ? new Date(order.eventDate).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—';
     const time = order.eventTime || '—';
@@ -53,43 +58,42 @@ function renderOrderCard(order) {
     const total = (order.totalAmount || 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
     const createdDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '';
 
-    // KYC Badge
+    // KYC Badge logic - ensure it handles 'approved' correctly
     const kycApproved = order.sellerKycStatus === 'approved';
     const kycBadge = kycApproved
-        ? `<span class="kyc-badge"><i class="fas fa-shield-alt"></i> KYC Verified</span>`
-        : `<span class="kyc-badge" style="background:rgba(245,158,11,0.1); border-color:rgba(245,158,11,0.3); color:#f59e0b;"><i class="fas fa-clock"></i> KYC Pending</span>`;
+        ? `<span class="kyc-badge" style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#10b981;"><i class="fas fa-shield-alt"></i> KYC Verified</span>`
+        : `<span class="kyc-badge" style="background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); color:#f59e0b;"><i class="fas fa-clock"></i> KYC Pending</span>`;
 
-    // Seller contact — always show (buyer requested so seller is notified)
+    // Seller contact — ensure all details are prominent as per user request
     const sellerBlock = `
-        <div class="seller-info-block">
-            <h4><i class="fas fa-user-circle" style="margin-right:6px;"></i>Seller Details</h4>
-            <div class="seller-name-row">
-                <span class="seller-display-name">${escHtml(order.sellerName || 'Unknown Seller')}</span>
+        <div class="seller-info-block" style="background:rgba(59,130,246,0.05); border:1px solid rgba(59,130,246,0.1); border-radius:12px; padding:15px; margin-top:15px;">
+            <h4 style="margin:0 0 12px; font-size:0.85rem; color:#3b82f6; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid rgba(59,130,246,0.1); padding-bottom:5px;">
+                <i class="fas fa-user-circle" style="margin-right:6px;"></i>Seller Details
+            </h4>
+            <div class="seller-name-row" style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+                <span class="seller-display-name" style="font-weight:700; color:#fff; font-size:1.05rem;">${escHtml(order.sellerName || 'Verified Seller')}</span>
                 ${kycBadge}
             </div>
-            ${order.sellerPhone ? `
-            <div class="seller-info-row">
-                <i class="fas fa-phone-alt"></i>
-                <a href="tel:${escHtml(order.sellerPhone)}">${escHtml(order.sellerPhone)}</a>
-                <a href="https://wa.me/91${order.sellerPhone.replace(/\D/g,'')}" target="_blank" style="color:#25d366; margin-left:8px;">
-                    <i class="fab fa-whatsapp"></i> WhatsApp
-                </a>
-            </div>` : ''}
-            ${order.sellerEmail ? `
-            <div class="seller-info-row">
-                <i class="fas fa-envelope"></i>
-                <a href="mailto:${escHtml(order.sellerEmail)}">${escHtml(order.sellerEmail)}</a>
-            </div>` : ''}
-            ${order.status === 'pending' ? `
-            <p style="margin:10px 0 0;font-size:0.8rem;color:#888;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                ${order.sellerPhone ? `
+                <div class="seller-info-row" style="display:flex; align-items:center; gap:8px; font-size:0.9rem;">
+                    <i class="fas fa-phone-alt" style="color:#3b82f6; width:16px;"></i>
+                    <a href="tel:${escHtml(order.sellerPhone)}" style="color:#93c5fd; text-decoration:none;">${escHtml(order.sellerPhone)}</a>
+                </div>
+                <div class="seller-info-row" style="display:flex; align-items:center; gap:8px; font-size:0.9rem;">
+                    <i class="fab fa-whatsapp" style="color:#25d366; width:16px;"></i>
+                    <a href="https://wa.me/91${order.sellerPhone.replace(/\D/g,'')}" target="_blank" style="color:#25d366; text-decoration:none;">WhatsApp</a>
+                </div>` : ''}
+                ${order.sellerEmail ? `
+                <div class="seller-info-row" style="display:flex; align-items:center; gap:8px; font-size:0.9rem; grid-column: span 2;">
+                    <i class="fas fa-envelope" style="color:#3b82f6; width:16px;"></i>
+                    <a href="mailto:${escHtml(order.sellerEmail)}" style="color:#93c5fd; text-decoration:none;">${escHtml(order.sellerEmail)}</a>
+                </div>` : ''}
+            </div>
+            <div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); font-size:0.8rem; color:#888;">
                 <i class="fas fa-info-circle" style="margin-right:4px;"></i>
-                The seller has been notified. They will contact you directly to complete the transfer.
-            </p>` : ''}
-            ${order.status === 'completed' ? `
-            <p style="margin:10px 0 0;font-size:0.82rem;color:#10b981;">
-                <i class="fas fa-check-circle" style="margin-right:4px;"></i>
-                Sale confirmed! Contact the seller to arrange the handover.
-            </p>` : ''}
+                Contact the seller directly to complete the transfer.
+            </div>
         </div>`;
 
     return `
