@@ -136,9 +136,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                     </div>
                     <div class="event-card-actions">
-                        <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'">Book Tickets</button>
+                        <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'">Get For Free</button>
                         <button class="card-btn-secondary" onclick="event.stopPropagation(); window.location.href='${sellUrl}'">
-                            <i class="fas fa-ticket-alt"></i> Sell Your Tickets
+                            <i class="fas fa-ticket-alt"></i> Sell Tickets
                         </button>
                     </div>
                 </div>
