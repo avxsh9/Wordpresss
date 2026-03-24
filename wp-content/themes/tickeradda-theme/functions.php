@@ -276,6 +276,25 @@ add_filter( 'template_include', function( $template ) {
     return $template;
 }, 999 );
 
+// 5. Resolve Slug Conflicts (Prioritize Pages over CPT Archives)
+add_filter( 'request', function( $query_vars ) {
+    // If requesting 'movies' and it's hitting the CPT archive, force it to the Page
+    if ( isset( $query_vars['post_type'] ) && $query_vars['post_type'] === 'movies' && empty( $query_vars['name'] ) ) {
+        unset( $query_vars['post_type'] );
+        $query_vars['pagename'] = 'movies';
+    }
+    return $query_vars;
+}, 1 );
+
+// Ensure 'movies' slug doesn't get changed to 'movies-2'
+add_filter( 'wp_unique_post_slug', function( $slug, $post_ID, $post_status, $post_type ) {
+    if ( $post_type === 'page' && in_array( $slug, ['movies', 'sports', 'theatre', 'play'] ) ) {
+        return $slug; // Force the original slug
+    }
+    return $slug;
+}, 10, 4 );
+
+
 
 
 // 4. Force Script Enqueueing

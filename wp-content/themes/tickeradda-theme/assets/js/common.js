@@ -1,4 +1,9 @@
 // TickerAdda Global Support
+window.getFilterValues = function(className) {
+    const checked = document.querySelectorAll(`.${className}:checked`);
+    return Array.from(checked).map(cb => cb.value);
+};
+
 function showAlert(title, text, icon = 'info') {
     if (typeof Swal !== 'undefined') {
         Swal.fire({
