@@ -315,12 +315,18 @@ class TA_Events {
 
     public function get_events( $request ) {
         $category = $request->get_param('category');
-        $search = $request->get_param('s');
-        $type = $request->get_param('type'); // trending, popular, recent
+        $search   = $request->get_param('s');
+        $type     = $request->get_param('type');
         $per_page = $request->get_param('per_page') ? (int) $request->get_param('per_page') : 500;
 
+        // CRITICAL: Always initialize $events to prevent null/blank JSON response
+        $events = array();
+
+        // Map category param to post_type and/or taxonomy slug
+        $post_types = array( 'events', 'movies', 'sports_events' );
+
         $args = array(
-            'post_type'      => array( 'events', 'movies', 'sports_events' ),
+            'post_type'      => $post_types,
             'posts_per_page' => -1,
             'post_status'    => 'publish',
             'orderby'        => 'meta_value',
@@ -328,48 +334,123 @@ class TA_Events {
             'order'          => 'ASC',
             'meta_query'     => array(
                 'relation' => 'OR',
-                array(
-                    'key'     => 'event_date',
-                    'compare' => 'EXISTS',
-                ),
-                array(
-                    'key'     => 'event_date',
-                    'compare' => 'NOT EXISTS',
-                ),
+                array( 'key' => 'event_date', 'compare' => 'EXISTS' ),
+                array( 'key' => 'event_date', 'compare' => 'NOT EXISTS' ),
             ),
         );
 
-        if ($category && $category !== 'all') {
-            $args['tax_query'] = array(
-                array(
-                    'taxonomy' => 'event_cat',
-                    'field'    => 'slug',
-                    'terms'    => $category,
-                ),
-            );
+        if ( $category && $category !== 'all' ) {
+            // Handle special category slugs mapped to post types
+            if ( $category === 'sports' ) {
+                $args['post_type'] = array( 'sports_events' );
+            } elseif ( $category === 'movies' ) {
+                // Movies: both dedicated post type AND events with movies tax term
+                $args['post_type'] = array( 'movies', 'events' );
+                $args['tax_query'] = array(
+                    'relation' => 'OR',
+                    array(
+                        'taxonomy' => 'event_cat',
+                        'field'    => 'slug',
+                        'terms'    => array( 'movies', 'movie' ),
+                        'operator' => 'IN',
+                    ),
+                    // Also match movies post type directly (no tax required)
+                    array(
+                        'taxonomy' => 'event_cat',
+                        'operator' => 'NOT EXISTS',
+                    ),
+                );
+                // Override: just use post_type = movies; events with movie category
+                // Simpler: use the movies post type
+                unset( $args['tax_query'] );
+                $args['post_type'] = array( 'movies', 'events' );
+                $args['tax_query'] = array(
+                    array(
+                        'taxonomy' => 'event_cat',
+                        'field'    => 'slug',
+                        'terms'    => array( 'movies', 'movie', 'film' ),
+                        'operator' => 'IN',
+                        'include_children' => true,
+                    ),
+                );
+                // Also get movies post type without taxonomy restriction
+                // Use two queries merged
+                $movies_args = array(
+                    'post_type'      => 'movies',
+                    'posts_per_page' => -1,
+                    'post_status'    => 'publish',
+                );
+                $movies_query = new WP_Query( $movies_args );
+                if ( $movies_query->have_posts() ) {
+                    while ( $movies_query->have_posts() ) {
+                        $movies_query->the_post();
+                        $events[] = $this->format_event( get_post() );
+                    }
+                }
+                wp_reset_postdata();
+                // Then also get events with movie category
+                $args['post_type'] = 'events';
+                // fall through to run second query
+            } elseif ( in_array( $category, array( 'theatre', 'theater', 'play', 'comedy', 'other', 'music', 'festival' ), true ) ) {
+                // Theatre/Play/Comedy: Use events post type, filter by event_cat taxonomy
+                $args['post_type'] = 'events';
+                $tax_terms = array( $category );
+                // Add aliases
+                if ( $category === 'theatre' ) $tax_terms = array( 'theatre', 'theater', 'drama', 'play', 'musical' );
+                if ( $category === 'play' )    $tax_terms = array( 'play', 'drama', 'theatre', 'theater', 'comedy', 'musical' );
+                if ( $category === 'comedy' )  $tax_terms = array( 'comedy', 'standup', 'stand-up' );
+                if ( $category === 'other' )   $tax_terms = array( 'other', 'general', 'misc' );
+
+                $args['tax_query'] = array(
+                    array(
+                        'taxonomy'         => 'event_cat',
+                        'field'            => 'slug',
+                        'terms'            => $tax_terms,
+                        'operator'         => 'IN',
+                        'include_children' => true,
+                    ),
+                );
+            } else {
+                // Generic: try taxonomy first
+                $args['tax_query'] = array(
+                    array(
+                        'taxonomy'         => 'event_cat',
+                        'field'            => 'slug',
+                        'terms'            => $category,
+                        'operator'         => 'IN',
+                        'include_children' => true,
+                    ),
+                );
+            }
         }
 
-
-        if ($search) {
+        if ( $search ) {
             $args['s'] = $search;
         }
-
-        if ($type === 'recent') {
+        if ( $type === 'recent' ) {
             $args['orderby'] = 'date';
-            $args['order'] = 'DESC';
+            $args['order']   = 'DESC';
         }
 
-        // Logic for trending/popular can be based on most tickets or custom meta
-        $query = new WP_Query($args);
-        if ($query->have_posts()) {
-            while ($query->have_posts()) {
+        $query = new WP_Query( $args );
+        if ( $query->have_posts() ) {
+            while ( $query->have_posts() ) {
                 $query->the_post();
-                $events[] = $this->format_event(get_post());
+                $events[] = $this->format_event( get_post() );
             }
         }
         wp_reset_postdata();
 
-        return rest_ensure_response($events);
+        // Deduplicate by ID (in case two queries returned same post)
+        $seen = array(); $unique = array();
+        foreach ( $events as $ev ) {
+            if ( ! isset( $seen[ $ev['id'] ] ) ) {
+                $seen[ $ev['id'] ] = true;
+                $unique[] = $ev;
+            }
+        }
+
+        return rest_ensure_response( $unique );
     }
 
     public function get_event( $request ) {
