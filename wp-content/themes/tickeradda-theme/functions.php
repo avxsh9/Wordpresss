@@ -16,7 +16,7 @@ add_action( 'after_setup_theme', function() {
 
 // ── Enqueue Scripts & Styles ───────────────────────────────────────────────────
 add_action( 'wp_enqueue_scripts', function() {
-    $v = time(); // force reload for dev
+    $v = '1.0.6'; // Persistent version across all scripts
     $uri = get_template_directory_uri();
 
     // Fonts & Icons (Original)
@@ -49,7 +49,7 @@ add_action( 'wp_enqueue_scripts', function() {
     }
 
     // Original Global JS (Load in head so TA is available for fetch interceptor)
-    wp_enqueue_script( 'ta-common', $uri . '/assets/js/common.js', array(), $v, false );
+    wp_enqueue_script( 'ta-common', $uri . '/assets/js/common.js', array('jquery'), $v, false );
 
     $js_map = array(
         'page-home.php'             => 'public/home.js',
@@ -59,7 +59,6 @@ add_action( 'wp_enqueue_scripts', function() {
         'page-theatre.php'          => 'public/theatre.js',
         'page-play.php'             => 'public/play.js',
         'page-buy-ticket.php'       => 'public/buy-ticket.js',
-
         'page-order-success.php'    => 'public/order-success.js',
         'page-login.php'            => 'auth/login.js',
         'page-register.php'         => 'auth/signup.js',
@@ -76,27 +75,28 @@ add_action( 'wp_enqueue_scripts', function() {
     );
 
     if ( isset( $js_map[ $template ] ) ) {
-        wp_enqueue_script( 'ta-page-js', $uri . '/assets/js/' . $js_map[ $template ], array( 'ta-common' ), $v, false );
+        wp_enqueue_script( 'ta-page-js', $uri . '/assets/js/' . $js_map[ $template ], array( 'ta-common' ), $v, true );
     }
 
-    // Direct check for "virtual" category pages to ensure scripts load even on 404/conflict
-    $path = trim( $_SERVER['REQUEST_URI'], '/' );
-    if ( strpos( $path, 'movies' ) !== false ) {
-        wp_enqueue_script( 'ta-movies-js', $uri . '/assets/js/public/movies.js', array( 'ta-common' ), $v, false );
-    } elseif ( strpos( $path, 'sports' ) !== false ) {
-        wp_enqueue_script( 'ta-sports-js', $uri . '/assets/js/public/sports.js', array( 'ta-common' ), $v, false );
-    } elseif ( strpos( $path, 'theatre' ) !== false ) {
-        wp_enqueue_script( 'ta-theatre-js', $uri . '/assets/js/public/theatre.js', array( 'ta-common' ), $v, false );
-    } elseif ( strpos( $path, 'play' ) !== false ) {
-        wp_enqueue_script( 'ta-play-js', $uri . '/assets/js/public/play.js', array( 'ta-common' ), $v, false );
+    // Direct check for slug-based routing (Ensures JS loads on forced templates)
+    $path = trim( parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ), '/' );
+    $parts = explode('/', $path);
+    $uri_slug = end($parts);
+    
+    if ( $uri_slug === 'movies' || is_page('movies') ) {
+        wp_enqueue_script( 'ta-movies-js-forced', $uri . '/assets/js/public/movies.js', array( 'ta-common' ), $v, true );
     }
-
-    if ( is_post_type_archive( 'events' ) ) {
-        wp_enqueue_script( 'ta-events-archive-js', $uri . '/assets/js/public/events.js', array( 'ta-common' ), $v, true );
+    if ( $uri_slug === 'sports' || is_page('sports') ) {
+        wp_enqueue_script( 'ta-sports-js-forced', $uri . '/assets/js/public/sports.js', array( 'ta-common' ), $v, true );
+    }
+    if ( $uri_slug === 'theatre' || is_page('theatre') ) {
+        wp_enqueue_script( 'ta-theatre-js-forced', $uri . '/assets/js/public/theatre.js', array( 'ta-common' ), $v, true );
+    }
+    if ( $uri_slug === 'play' || is_page('play') ) {
+        wp_enqueue_script( 'ta-play-js-forced', $uri . '/assets/js/public/play.js', array( 'ta-common' ), $v, true );
     }
 
     // Pass data...
-
     $current_user_data = null;
     if ( is_user_logged_in() ) {
         $user = wp_get_current_user();
@@ -131,7 +131,7 @@ add_action( 'wp_enqueue_scripts', function() {
     ) );
 } );
 
-// ── Auth Redirects (WordPress Native) ─────────────────────────────────────────
+// ── Auth Redirects ────────────────────────────────────────────────────────────
 add_action( 'template_redirect', function() {
     global $wp;
     $protected_templates = array(
@@ -150,10 +150,8 @@ add_action( 'template_redirect', function() {
 
     $slug = get_page_template_slug();
     
-    // Redirect unauthenticated users
     if ( in_array( $slug, $protected_templates, true ) && ! is_user_logged_in() ) {
         $login_url = home_url( '/login/' );
-        // Append current page as redirect_to
         $current_url = home_url( add_query_arg( array(), $wp->request ) );
         if ( ! empty( $_SERVER['QUERY_STRING'] ) ) {
             $current_url .= '?' . $_SERVER['QUERY_STRING'];
@@ -163,41 +161,31 @@ add_action( 'template_redirect', function() {
         exit;
     }
 
-    // Redirect /dashboard/ to /buyer-dashboard-2/
     if ( is_page( 'dashboard' ) ) {
         wp_redirect( home_url( '/buyer-dashboard-2/' ) );
         exit;
     }
 
-    // Redirect authenticated users away from auth pages
     $auth_templates = array( 'page-login.php', 'page-register.php', 'page-forgot-password.php' );
     if ( in_array( $slug, $auth_templates, true ) && is_user_logged_in() ) {
         wp_redirect( home_url( '/' ) );
         exit;
     }
-
-    // Unified role access: All logged in users can access all templates
 } );
 
-// Allow Cookie Auth for REST API
+// ── REST API Config ───────────────────────────────────────────────────────────
 add_filter( 'rest_authentication_errors', function( $result ) {
     if ( ! empty( $result ) ) return $result;
-    if ( ! is_user_logged_in() ) return $result;
     return $result;
 } );
 
-// Clean WP Head
-remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
-remove_action( 'wp_print_styles', 'print_emoji_styles' );
-
-// ── Category Page Setup ─────────────────────────────────────────────────────
+// ── Category Page Setup ───────────────────────────────────────────────────────
 add_action( 'init', function() {
     $pages_to_create = array(
-        'movies'       => array( 'title' => 'Movies',       'template' => 'page-movies.php' ),
-        'sports'       => array( 'title' => 'Sports',       'template' => 'page-sports.php' ),
-        'theatre'      => array( 'title' => 'Theatre',      'template' => 'page-theatre.php' ),
-        'play'         => array( 'title' => 'Play',         'template' => 'page-play.php' ),
-        'debug-status' => array( 'title' => 'Debug Status', 'template' => 'debug-status.php' ),
+        'movies'  => array( 'title' => 'Movies',  'template' => 'page-movies.php' ),
+        'sports'  => array( 'title' => 'Sports',  'template' => 'page-sports.php' ),
+        'theatre' => array( 'title' => 'Theatre', 'template' => 'page-theatre.php' ),
+        'play'    => array( 'title' => 'Play',    'template' => 'page-play.php' ),
     );
 
     foreach ( $pages_to_create as $slug => $data ) {
@@ -210,43 +198,21 @@ add_action( 'init', function() {
             ) );
             if ( $page_id ) update_post_meta( $page_id, '_wp_page_template', $data['template'] );
         } else {
-            // Ensure template is correct even if page existed
             $page = get_page_by_path( $slug );
             update_post_meta( $page->ID, '_wp_page_template', $data['template'] );
+            // Ensure slug is exactly what we want (not movies-2)
+            if ( $page->post_name !== $slug ) {
+                wp_update_post( array( 'ID' => $page->ID, 'post_name' => $slug ) );
+            }
         }
-    }
-
-    // Force flush rewrite rules once more
-    if ( get_option( 'ta_permalinks_flushed' ) < 2 ) {
-        flush_rewrite_rules();
-        update_option( 'ta_permalinks_flushed', 2 );
     }
 } );
 
-// Script Enqueueing
-add_action( 'wp_enqueue_scripts', function() {
-    $uri = get_template_directory_uri();
-    $v   = '1.0.4';
-    $path = trim( parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ), '/' );
-    $parts = explode('/', $path);
-    $slug = end($parts);
-    
-    if ( $slug === 'movies' || is_page('movies') || is_post_type_archive('movies') ) {
-        wp_enqueue_script( 'ta-movies-js', $uri . '/assets/js/public/movies.js', array( 'ta-common' ), $v, true );
-    }
-    if ( $slug === 'sports' || is_page('sports') || is_post_type_archive('sports_events') ) {
-        wp_enqueue_script( 'ta-sports-js', $uri . '/assets/js/public/sports.js', array( 'ta-common' ), $v, true );
-    }
-    if ( $slug === 'theatre' || is_page('theatre') ) {
-        wp_enqueue_script( 'ta-theatre-js', $uri . '/assets/js/public/theatre.js', array( 'ta-common' ), $v, true );
-    }
-    if ( $slug === 'play' || is_page('play') ) {
-        wp_enqueue_script( 'ta-play-js', $uri . '/assets/js/public/play.js', array( 'ta-common' ), $v, true );
-    }
-}, 30 );
+// ── Brute-Force 404 Resolver ──────────────────────────────────────────────────
+// Intercepts categories that 404 due to CPT/Taxonomy slug conflicts
+add_action( 'template_redirect', function() {
+    if ( ! is_404() ) return;
 
-// Robust Template Override for Categories (Fixes 404s for empty archives)
-add_filter( 'template_include', function( $template ) {
     $path = trim( parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ), '/' );
     $parts = explode('/', $path);
     $slug = end($parts);
@@ -256,65 +222,28 @@ add_filter( 'template_include', function( $template ) {
         'sports'  => 'page-sports.php',
         'theatre' => 'page-theatre.php',
         'play'    => 'page-play.php',
-        'debug-slug'   => 'debug-slug.php',
-        'debug-status' => 'debug-status.php',
     );
-
 
     if ( isset( $map[ $slug ] ) ) {
         $file = get_template_directory() . '/' . $map[ $slug ];
         if ( file_exists( $file ) ) {
-            // Force 200 OK and prevent WP from thinking it's a 404
             global $wp_query;
             $wp_query->is_404 = false;
-            $wp_query->is_page = true;
-            $wp_query->is_archive = false;
             status_header( 200 );
-            return $file;
+            include( $file );
+            exit;
         }
     }
-    return $template;
-}, 999 );
-
-// 5. Resolve Slug Conflicts (Prioritize Pages over CPT Archives)
-add_filter( 'request', function( $query_vars ) {
-    // If requesting 'movies' and it's hitting the CPT archive, force it to the Page
-    if ( isset( $query_vars['post_type'] ) && $query_vars['post_type'] === 'movies' && empty( $query_vars['name'] ) ) {
-        unset( $query_vars['post_type'] );
-        $query_vars['pagename'] = 'movies';
-    }
-    return $query_vars;
 }, 1 );
 
-// Ensure 'movies' slug doesn't get changed to 'movies-2'
+// ── Slug Collision Protection ─────────────────────────────────────────────────
 add_filter( 'wp_unique_post_slug', function( $slug, $post_ID, $post_status, $post_type ) {
     if ( $post_type === 'page' && in_array( $slug, ['movies', 'sports', 'theatre', 'play'] ) ) {
-        return $slug; // Force the original slug
+        return $slug; 
     }
     return $slug;
 }, 10, 4 );
 
-
-
-
-// 4. Force Script Enqueueing
-add_action( 'wp_enqueue_scripts', function() {
-    $uri = get_template_directory_uri();
-    $v   = '1.0.2';
-    $path = trim( parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ), '/' );
-    $parts = explode('/', $path);
-    $slug = end($parts);
-
-    if ( $slug === 'movies' ) {
-        wp_enqueue_script( 'ta-movies-js', $uri . '/assets/js/public/movies.js', array( 'ta-common' ), $v, true );
-    } elseif ( $slug === 'sports' ) {
-        wp_enqueue_script( 'ta-sports-js', $uri . '/assets/js/public/sports.js', array( 'ta-common' ), $v, true );
-    } elseif ( $slug === 'theatre' ) {
-        wp_enqueue_script( 'ta-theatre-js', $uri . '/assets/js/public/theatre.js', array( 'ta-common' ), $v, true );
-    } elseif ( $slug === 'play' ) {
-        wp_enqueue_script( 'ta-play-js', $uri . '/assets/js/public/play.js', array( 'ta-common' ), $v, true );
-    }
-}, 30 );
-
-
-
+// Cleanup
+remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
+remove_action( 'wp_print_styles', 'print_emoji_styles' );
