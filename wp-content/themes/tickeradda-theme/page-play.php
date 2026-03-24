@@ -93,25 +93,37 @@ get_header();
                 <aside class="theatre-sidebar">
                     <h3 style="margin:0 0 20px; font-size:1.1rem; color:#fff;">Filter Plays</h3>
 
-                    <!-- Type -->
+                    <!-- Category (built dynamically by play.js) -->
                     <div class="filter-group">
                         <h4>Category</h4>
-                        <label class="filter-label"><input type="checkbox" class="type-filter" value="play"> Plays</label>
-                        <label class="filter-label"><input type="checkbox" class="type-filter" value="drama"> Drama</label>
-                        <label class="filter-label"><input type="checkbox" class="type-filter" value="musical"> Musical</label>
+                        <div id="categoryFilters">
+                            <label class="filter-label"><input type="checkbox" class="type-filter" value="play"> Plays / Drama</label>
+                            <label class="filter-label"><input type="checkbox" class="type-filter" value="comedy"> Stand-up & Comedy</label>
+                            <label class="filter-label"><input type="checkbox" class="type-filter" value="musical"> Musical / Dance</label>
+                        </div>
                     </div>
 
-                    <!-- City -->
+                    <!-- City (built dynamically) -->
                     <div class="filter-group">
                         <h4>City</h4>
-                        <label class="filter-label"><input type="checkbox" class="city-filter" value="mumbai"> Mumbai</label>
-                        <label class="filter-label"><input type="checkbox" class="city-filter" value="delhi"> Delhi</label>
-                        <label class="filter-label"><input type="checkbox" class="city-filter" value="bangalore"> Bengaluru</label>
+                        <div id="cityFilters">
+                            <p style="color:#666;font-size:0.85rem;">Loading cities...</p>
+                        </div>
+                    </div>
+
+                    <!-- Price Range -->
+                    <div class="filter-group">
+                        <h4>Max Price (₹)</h4>
+                        <input type="range" id="priceRange" min="0" max="10000" step="500" value="10000">
+                        <div class="range-display" style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--text-gray);">
+                            <span>₹0</span>
+                            <span id="priceRangeDisplay">₹10,000</span>
+                        </div>
                     </div>
 
                     <!-- Date -->
                     <div class="filter-group">
-                        <h4>Date</h4>
+                        <h4>Date From</h4>
                         <input type="date" id="playDateFilter" style="width:100%;padding:8px 12px;background:var(--card-bg);border:1px solid var(--glass-border);border-radius:10px;color:#fff;outline:none;">
                     </div>
 
@@ -142,6 +154,8 @@ get_header();
                             <select id="playSort">
                                 <option value="date_asc">Date (Earliest)</option>
                                 <option value="date_desc">Date (Latest)</option>
+                                <option value="price_asc">Price (Low to High)</option>
+                                <option value="price_desc">Price (High to Low)</option>
                                 <option value="name_asc">Name (A-Z)</option>
                             </select>
                         </div>

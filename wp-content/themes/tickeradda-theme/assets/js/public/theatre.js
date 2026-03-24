@@ -1,43 +1,201 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    const grid         = document.getElementById('theatreGrid');
-    const searchInput  = document.getElementById('theatreSearch');
-    const clearBtn     = document.getElementById('clearTheatreFilters');
-    const dateFilter   = document.getElementById('theatreDateFilter');
-    const sortSelect   = document.getElementById('theatreSort');
-    const countEl      = document.getElementById('theatreResultCount');
+    const grid            = document.getElementById('theatreGrid');
+    const searchInput     = document.getElementById('theatreSearch');
+    const clearBtn        = document.getElementById('clearTheatreFilters');
+    const dateFilter      = document.getElementById('theatreDateFilter');
+    const sortSelect      = document.getElementById('theatreSort');
+    const countEl         = document.getElementById('theatreResultCount');
     const activeFiltersEl = document.getElementById('theatreActiveFilters');
+    const priceRange      = document.getElementById('priceRange');
+    const priceDisplay    = document.getElementById('priceRangeDisplay');
 
-    let allShows = [];
+    let allShows    = [];
+    let maxPriceAll = 10000;
 
-    // Fetch both 'theatre' and 'other' categories for this page
+    // ── Fetch theatre & other shows ───────────────────────────────────────────
     try {
-        const [theatreRes, otherRes] = await Promise.all([
-            fetch(`${TA.restUrl}/events-list?category=theatre`),
-            fetch(`${TA.restUrl}/events-list?category=other`)
+        const [r1, r2] = await Promise.all([
+            fetch(`${TA.restUrl}/events-list?category=theatre&per_page=500`),
+            fetch(`${TA.restUrl}/events-list?category=other&per_page=500`),
         ]);
-        const theatreShows = await theatreRes.json();
-        const otherShows   = await otherRes.json();
-        allShows = [...theatreShows, ...otherShows];
+        const t1 = await r1.json();
+        const t2 = await r2.json();
+        allShows = [...(Array.isArray(t1) ? t1 : []), ...(Array.isArray(t2) ? t2 : [])];
+
+        // Dynamic price max
+        const prices = allShows.map(e => e.price || 0).filter(p => p > 0);
+        if (prices.length > 0) {
+            maxPriceAll = Math.max(...prices);
+            if (priceRange) { priceRange.max = maxPriceAll; priceRange.value = maxPriceAll; }
+            if (priceDisplay) priceDisplay.textContent = `₹${maxPriceAll.toLocaleString('en-IN')}`;
+        }
+
+        buildTypeFilters();
+        buildCityFilters();
+        buildLanguageFilters();
         applyFilters();
     } catch (e) {
         console.error('Theatre load error:', e);
-        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:#aaa;">
+        if (grid) grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:#aaa;">
             <i class="fas fa-exclamation-circle fa-2x" style="color:#ef4444;margin-bottom:15px;display:block;"></i>
-            Could not load shows. Please try again.
-        </div>`;
+            Could not load shows. Please try again.</div>`;
     }
 
-    // Attach filter listeners
-    document.querySelectorAll('.type-filter, .city-filter, .lang-filter').forEach(cb => {
-        cb.addEventListener('change', applyFilters);
-    });
+    // ── Dynamic Show Type Filter ─────────────────────────────────────────────
+    function buildTypeFilters() {
+        const container = document.getElementById('showTypeFilters');
+        if (!container) return;
+
+        const TYPE_KEYWORDS = {
+            drama:   ['drama', 'play', 'theatre', 'natak'],
+            comedy:  ['comedy', 'stand-up', 'standup', 'open mic'],
+            concert: ['concert', 'music', 'live music'],
+            musical: ['musical', 'broadway', 'opera'],
+            festival:['festival', 'fest', 'mela'],
+        };
+
+        const detected = new Set();
+        allShows.forEach(e => {
+            const combined = (e.name + ' ' + (e.category || '') + ' ' + (e.description || '')).toLowerCase();
+            Object.entries(TYPE_KEYWORDS).forEach(([type, kws]) => {
+                if (kws.some(kw => combined.includes(kw))) detected.add(type);
+            });
+        });
+
+        if (detected.size === 0) {
+            ['drama', 'comedy', 'concert', 'musical'].forEach(t => detected.add(t));
+        }
+
+        const LABELS = { drama: 'Drama / Play', comedy: 'Stand-up Comedy', concert: 'Concert', musical: 'Musical', festival: 'Festival' };
+        container.innerHTML = [...detected].map(type => `
+            <label class="filter-label">
+                <input type="checkbox" class="type-filter" value="${type}">
+                ${LABELS[type] || type.charAt(0).toUpperCase() + type.slice(1)}
+            </label>`).join('');
+
+        container.querySelectorAll('.type-filter').forEach(cb => cb.addEventListener('change', applyFilters));
+    }
+
+    // ── Dynamic City Filter ───────────────────────────────────────────────────
+    function buildCityFilters() {
+        const container = document.getElementById('cityFilters');
+        if (!container) return;
+
+        const citySet = new Set();
+        allShows.forEach(e => {
+            if (e.location) {
+                const parts = e.location.split(',');
+                const city  = parts[parts.length - 1].trim();
+                if (city.length > 1 && city.length < 30) citySet.add(city.charAt(0).toUpperCase() + city.slice(1).toLowerCase());
+            }
+        });
+
+        if (citySet.size === 0) { container.innerHTML = '<p style="color:#666;font-size:0.85rem;">No city data yet.</p>'; return; }
+
+        container.innerHTML = [...citySet].slice(0, 8).map(city => `
+            <label class="filter-label">
+                <input type="checkbox" class="city-filter" value="${city.toLowerCase()}">
+                ${city}
+            </label>`).join('');
+
+        container.querySelectorAll('.city-filter').forEach(cb => cb.addEventListener('change', applyFilters));
+    }
+
+    // ── Dynamic Language Filter ───────────────────────────────────────────────
+    function buildLanguageFilters() {
+        const container = document.getElementById('langFilters');
+        if (!container) return;
+
+        const langSet = new Set();
+        allShows.forEach(e => {
+            if (e.movieLanguage) {
+                e.movieLanguage.split(',').forEach(l => {
+                    const lang = l.trim();
+                    if (lang.length > 1) langSet.add(lang.charAt(0).toUpperCase() + lang.slice(1).toLowerCase());
+                });
+            }
+        });
+
+        if (langSet.size === 0) {
+            ['Hindi', 'English', 'Marathi', 'Bengali'].forEach(l => langSet.add(l));
+        }
+
+        container.innerHTML = [...langSet].map(lang => `
+            <label class="filter-label">
+                <input type="checkbox" class="lang-filter" value="${lang.toLowerCase()}">
+                ${lang}
+            </label>`).join('');
+
+        container.querySelectorAll('.lang-filter').forEach(cb => cb.addEventListener('change', applyFilters));
+    }
+
+    // ── Filter Logic ─────────────────────────────────────────────────────────
+    function applyFilters() {
+        const types    = [...document.querySelectorAll('.type-filter:checked')].map(el => el.value);
+        const cities   = [...document.querySelectorAll('.city-filter:checked')].map(el => el.value);
+        const langs    = [...document.querySelectorAll('.lang-filter:checked')].map(el => el.value);
+        const maxPrice = priceRange ? parseInt(priceRange.value) : maxPriceAll;
+        const query    = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        const dateVal  = dateFilter ? dateFilter.value : '';
+
+        const TYPE_KEYWORDS = {
+            drama: ['drama', 'play', 'theatre', 'natak'],
+            comedy: ['comedy', 'stand-up', 'standup'],
+            concert: ['concert', 'music'],
+            musical: ['musical', 'broadway'],
+            festival: ['festival', 'fest'],
+        };
+
+        let filtered = allShows.filter(event => {
+            const combined = (event.name + ' ' + (event.location || '') + ' ' + (event.category || '') + ' ' + (event.description || '')).toLowerCase();
+
+            let matchType = types.length === 0;
+            if (!matchType) matchType = types.some(t => (TYPE_KEYWORDS[t] || [t]).some(kw => combined.includes(kw)));
+
+            const loc = (event.location || '').toLowerCase();
+            const matchCity = cities.length === 0 || cities.some(c => loc.includes(c));
+
+            const movieLang = (event.movieLanguage || '').toLowerCase();
+            const matchLang = langs.length === 0 || langs.some(l => movieLang.includes(l) || combined.includes(l));
+
+            const price = event.price || 0;
+            const matchPrice = price === 0 || price <= maxPrice;
+
+            const matchQuery = query === '' || combined.includes(query);
+            const matchDate  = !dateVal || !event.date || event.date >= dateVal;
+
+            return matchType && matchCity && matchLang && matchPrice && matchQuery && matchDate;
+        });
+
+        const sort = sortSelect?.value || 'date_asc';
+        filtered.sort((a, b) => {
+            if (sort === 'date_asc')   return (a.date || '') > (b.date || '') ?  1 : -1;
+            if (sort === 'date_desc')  return (a.date || '') < (b.date || '') ?  1 : -1;
+            if (sort === 'price_asc')  return (a.price || 0) - (b.price || 0);
+            if (sort === 'price_desc') return (b.price || 0) - (a.price || 0);
+            if (sort === 'name_asc')   return (a.name || '') > (b.name || '') ?  1 : -1;
+            return 0;
+        });
+
+        renderActivePills(types, cities, langs, maxPrice);
+        if (countEl) countEl.textContent = `${filtered.length} show${filtered.length !== 1 ? 's' : ''} found`;
+        renderGrid(filtered);
+    }
+
+    // ── Listeners ─────────────────────────────────────────────────────────────
     if (searchInput) searchInput.addEventListener('input', applyFilters);
     if (dateFilter)  dateFilter.addEventListener('change', applyFilters);
     if (sortSelect)  sortSelect.addEventListener('change', applyFilters);
-
+    if (priceRange) {
+        priceRange.addEventListener('input', () => {
+            if (priceDisplay) priceDisplay.textContent = `₹${parseInt(priceRange.value).toLocaleString('en-IN')}`;
+            applyFilters();
+        });
+    }
     if (clearBtn) {
         clearBtn.addEventListener('click', () => {
             document.querySelectorAll('.type-filter, .city-filter, .lang-filter').forEach(cb => cb.checked = false);
+            if (priceRange)  { priceRange.value = maxPriceAll; if (priceDisplay) priceDisplay.textContent = `₹${maxPriceAll.toLocaleString('en-IN')}`; }
             if (searchInput) searchInput.value = '';
             if (dateFilter)  dateFilter.value  = '';
             if (sortSelect)  sortSelect.value  = 'date_asc';
@@ -45,121 +203,84 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    function applyFilters() {
-        const types  = [...document.querySelectorAll('.type-filter:checked')].map(el => el.value);
-        const cities = [...document.querySelectorAll('.city-filter:checked')].map(el => el.value);
-        const langs  = [...document.querySelectorAll('.lang-filter:checked')].map(el => el.value);
-        const query  = searchInput ? searchInput.value.toLowerCase().trim() : '';
-        const dateVal = dateFilter ? dateFilter.value : '';
-
-        let filtered = allShows.filter(event => {
-            const combined = (event.name + ' ' + event.location + ' ' + event.description).toLowerCase();
-            const matchType  = types.length  === 0 || types.some(t  => combined.includes(t));
-            const matchCity  = cities.length === 0 || cities.some(c  => combined.includes(c));
-            const matchLang  = langs.length  === 0 || langs.some(l   => combined.includes(l));
-            const matchQuery = query === ''         || combined.includes(query);
-            const matchDate  = !dateVal || !event.date || event.date >= dateVal;
-            return matchType && matchCity && matchLang && matchQuery && matchDate;
-        });
-
-        // Sort
-        const sort = sortSelect ? sortSelect.value : 'date_asc';
-        filtered.sort((a, b) => {
-            if (sort === 'date_asc')  return (a.date || '') > (b.date || '') ?  1 : -1;
-            if (sort === 'date_desc') return (a.date || '') < (b.date || '') ?  1 : -1;
-            if (sort === 'name_asc')  return (a.name || '') > (b.name || '') ?  1 : -1;
-            return 0;
-        });
-
-        // Active pills
-        renderActivePills([...types, ...cities, ...langs]);
-        if (countEl) countEl.textContent = `${filtered.length} show${filtered.length !== 1 ? 's' : ''} found`;
-        renderGrid(filtered);
-    }
-
-    function renderActivePills(active) {
+    // ── Active Pill Pills ─────────────────────────────────────────────────────
+    function renderActivePills(types, cities, langs, maxPrice) {
         if (!activeFiltersEl) return;
-        if (active.length === 0) { activeFiltersEl.innerHTML = ''; return; }
-        activeFiltersEl.innerHTML = active.map(f => `
-            <span class="active-filter-pill" data-val="${f}">
-                ${f.charAt(0).toUpperCase() + f.slice(1)}
-                <i class="fas fa-times" style="font-size:0.7rem;"></i>
-            </span>
-        `).join('');
+        const pills = [];
+        types.forEach(t  => pills.push({ label: t.charAt(0).toUpperCase() + t.slice(1), val: t, cls: 'type-filter' }));
+        cities.forEach(c => pills.push({ label: c.charAt(0).toUpperCase() + c.slice(1), val: c, cls: 'city-filter' }));
+        langs.forEach(l  => pills.push({ label: l.charAt(0).toUpperCase() + l.slice(1), val: l, cls: 'lang-filter' }));
+        if (maxPrice < maxPriceAll) pills.push({ label: `Max ₹${maxPrice.toLocaleString('en-IN')}`, val: 'price', cls: 'price' });
+
+        if (!pills.length) { activeFiltersEl.innerHTML = ''; return; }
+        activeFiltersEl.innerHTML = pills.map(p => `
+            <span class="active-filter-pill" data-val="${p.val}" data-cls="${p.cls}">
+                ${p.label} <i class="fas fa-times" style="font-size:0.7rem;"></i>
+            </span>`).join('');
+
         activeFiltersEl.querySelectorAll('.active-filter-pill').forEach(pill => {
             pill.addEventListener('click', () => {
-                const cb = document.querySelector(`input[value="${pill.getAttribute('data-val')}"]`);
-                if (cb) { cb.checked = false; applyFilters(); }
+                const val = pill.dataset.val, cls = pill.dataset.cls;
+                if (cls === 'price') {
+                    if (priceRange) { priceRange.value = maxPriceAll; if (priceDisplay) priceDisplay.textContent = `₹${maxPriceAll.toLocaleString('en-IN')}`; }
+                } else {
+                    const cb = document.querySelector(`input.${cls}[value="${val}"]`);
+                    if (cb) cb.checked = false;
+                }
+                applyFilters();
             });
         });
     }
 
+    // ── Render Cards ──────────────────────────────────────────────────────────
     function renderGrid(events) {
         if (!grid) return;
         if (!events || events.length === 0) {
             grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:80px 20px;color:#aaa;">
                 <i class="fas fa-masks-theater fa-3x" style="color:var(--primary);margin-bottom:20px;display:block;"></i>
-                <h3 style="color:#fff;margin-bottom:10px;">No shows found</h3>
-                <p>Try adjusting your filters or search term.</p>
+                <h3 style="color:#fff;margin-bottom:10px;">No shows match your filters</h3>
+                <p style="margin-bottom:25px;">Try clearing filters or broadening your search.</p>
+                <a href="${TA.homeUrl}sell-ticket/" class="btn btn-primary"><i class="fas fa-plus-circle"></i> List a Show</a>
             </div>`;
             return;
         }
+
         grid.innerHTML = events.map(event => {
-            const isMovie = event.post_type === 'movies' || (event.category && event.category.toLowerCase() === 'movies');
             const dateObj = event.date ? new Date(event.date) : null;
-            const formattedDate = dateObj && !isNaN(dateObj)
-                ? dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
-                : 'TBD';
+            const fmtDate = dateObj && !isNaN(dateObj)
+                ? dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                : 'Date TBD';
 
-            // Enhanced Sell Link with params
+            const priceTag = event.price > 0
+                ? `<span class="price-tag">From ₹${event.price.toLocaleString('en-IN')}</span>`
+                : `<span class="price-tag free-tag"><i class="fas fa-gift"></i> Free</span>`;
+
+            const tickets = event.ticketCount > 0
+                ? `<span style="color:#10b981;"><i class="fas fa-ticket-alt"></i> ${event.ticketCount} available</span>` : '';
+
             const sellUrl = `${TA.homeUrl}sell-ticket/?event_id=${event.id}&event_name=${encodeURIComponent(event.name)}&category=${encodeURIComponent(event.category || 'theatre')}&venue=${encodeURIComponent(event.location || '')}&date=${event.date || ''}&time=${encodeURIComponent(event.time || '')}`;
+            const lang    = event.movieLanguage ? `<span><i class="fas fa-language" style="color:var(--primary);"></i> ${event.movieLanguage}</span>` : '';
 
-            // Movie specific content: Only Poster, Name, IMDb, Rating
-            if (isMovie) {
-                const rating = event.movieRating || '8.5';
-                const cert   = event.movieCert || 'UA';
-                return `
-                    <div class="event-card-premium" onclick="window.location.href='${event.url}'">
-                        <div class="event-card-image">
-                            <img src="${event.image}" alt="${event.name}" loading="lazy" 
-                                 onerror="this.src='https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=600&q=80'">
-                            <div class="event-card-category">${(event.category || 'MOVIE').toUpperCase()}</div>
-                        <div class="event-card-details">
-                            <h3 class="event-card-title">${event.name}</h3>
-                            <div class="event-card-meta">
-                                <span class="movie-meta-badge"><i class="fas fa-user-shield"></i> Rated ${cert}</span>
-                            </div>
-                        </div>
-                        <div class="event-card-actions">
-                            <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'"><i class="fas fa-ticket-alt"></i> Get For Free</button>
-                            <button class="card-btn-secondary" onclick="event.stopPropagation(); window.location.href='${sellUrl}'">
-                                <i class="fas fa-plus-circle"></i> Sell Tickets
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // General minimalist card
             return `
                 <div class="event-card-premium" onclick="window.location.href='${event.url}'">
                     <div class="event-card-image">
-                        <img src="${event.image}" alt="${event.name}" loading="lazy" 
-                             onerror="this.src='https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=600&q=80'">
+                        <img src="${event.image}" alt="${event.name}" loading="lazy"
+                             onerror="this.src='https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=600&q=80'">
                         <div class="event-card-category">${(event.category || 'THEATRE').toUpperCase()}</div>
+                        ${priceTag}
                     </div>
                     <div class="event-card-details">
                         <h3 class="event-card-title">${event.name}</h3>
                         <div class="event-card-meta">
-                            <span><i class="far fa-calendar-alt"></i> ${formattedDate} ${event.time ? `• ${event.time}` : ''}</span>
+                            <span><i class="far fa-calendar-alt"></i> ${fmtDate}${event.time ? ` · ${event.time}` : ''}</span>
                             <span><i class="fas fa-map-marker-alt"></i> ${event.location || 'Venue TBD'}</span>
+                            ${lang}
+                            ${tickets}
                         </div>
                     </div>
                     <div class="event-card-actions">
                         <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'"><i class="fas fa-ticket-alt"></i> Get For Free</button>
-                        <button class="card-btn-secondary" onclick="event.stopPropagation(); window.location.href='${sellUrl}'">
-                            <i class="fas fa-plus-circle"></i> Sell Tickets
-                        </button>
+                        <button class="card-btn-secondary" onclick="event.stopPropagation(); window.location.href='${sellUrl}'"><i class="fas fa-plus-circle"></i> Sell Tickets</button>
                     </div>
                 </div>
             `;
