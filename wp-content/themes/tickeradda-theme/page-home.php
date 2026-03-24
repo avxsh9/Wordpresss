@@ -74,7 +74,7 @@ get_header();
                         <i class="fa-solid fa-person-running" style="font-size:0.75rem;"></i> Kabaddi
                     </button>
                 </div>
-                <a href="<?php echo esc_url(home_url('/sports/')); ?>" class="btn btn-outline">View all sports</a>
+                <a href="<?php echo esc_url(home_url('/events/?category=sports')); ?>" class="btn btn-outline">View all sports</a>
             </div>
             <div class="grid grid-4" id="homeSportsGrid">
                 <p style="grid-column: 1/-1; text-align: center; color: var(--text-gray);">Loading sports events...</p>
@@ -90,7 +90,7 @@ get_header();
                     <h2>Movies</h2>
                     <p>Latest blockbusters in theatres near you</p>
                 </div>
-                <a href="<?php echo esc_url(home_url('/movies/')); ?>" class="btn btn-outline">View all movies</a>
+                <a href="<?php echo esc_url(home_url('/events/?category=movies')); ?>" class="btn btn-outline">View all movies</a>
             </div>
             <div class="grid grid-4" id="homeMoviesGrid">
                 <p style="grid-column: 1/-1; text-align: center; color: var(--text-gray);">Loading movies...</p>
@@ -106,7 +106,7 @@ get_header();
                     <h2>Theatre &amp; Plays</h2>
                     <p>Experience the magic of stage</p>
                 </div>
-                <a href="<?php echo esc_url(home_url('/theatre/')); ?>" class="btn btn-outline">View all theatre</a>
+                <a href="<?php echo esc_url(home_url('/events/?category=theatre')); ?>" class="btn btn-outline">View all theatre</a>
             </div>
             <div class="grid grid-4" id="homeTheatreGrid">
                 <p style="grid-column: 1/-1; text-align: center; color: var(--text-gray);">Loading theatre events...</p>
