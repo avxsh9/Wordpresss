@@ -101,31 +101,24 @@ input[type="range"] {
                 <aside class="sports-sidebar">
                     <h3 style="margin:0 0 20px; font-size:1.1rem; color:#fff;">Filter Sports</h3>
 
-                    <!-- Sport Type -->
+                    <!-- Sport Type (built dynamically by sports.js) -->
                     <div class="filter-group">
                         <h4>Sport Type</h4>
-                        <label class="filter-label">
-                            <input type="checkbox" class="sport-filter" value="cricket">
-                            Cricket <span class="sub-label">IPL · Test · ODI</span>
-                        </label>
-                        <label class="filter-label">
-                            <input type="checkbox" class="sport-filter" value="football">
-                            Football <span class="sub-label">ISL · I-League</span>
-                        </label>
-                        <label class="filter-label">
-                            <input type="checkbox" class="sport-filter" value="kabaddi">
-                            Kabaddi <span class="sub-label">Pro Kabaddi</span>
-                        </label>
+                        <div id="sportTypeFilters">
+                            <!-- Defaults shown while JS loads -->
+                            <label class="filter-label"><input type="checkbox" class="sport-filter" value="cricket"> Cricket <span class="sub-label">IPL · Test · ODI</span></label>
+                            <label class="filter-label"><input type="checkbox" class="sport-filter" value="football"> Football <span class="sub-label">ISL · I-League</span></label>
+                            <label class="filter-label"><input type="checkbox" class="sport-filter" value="kabaddi"> Kabaddi <span class="sub-label">Pro Kabaddi</span></label>
+                        </div>
                     </div>
 
-                    <!-- Location / City -->
+                    <!-- City (built dynamically by sports.js) -->
                     <div class="filter-group">
                         <h4>City</h4>
-                        <label class="filter-label"><input type="checkbox" class="city-filter" value="mumbai"> Mumbai</label>
-                        <label class="filter-label"><input type="checkbox" class="city-filter" value="delhi"> Delhi</label>
-                        <label class="filter-label"><input type="checkbox" class="city-filter" value="bangalore"> Bengaluru</label>
-                        <label class="filter-label"><input type="checkbox" class="city-filter" value="kolkata"> Kolkata</label>
-                        <label class="filter-label"><input type="checkbox" class="city-filter" value="chennai"> Chennai</label>
+                        <div id="cityFilters">
+                            <!-- Filled dynamically -->
+                            <p style="color:#666;font-size:0.85rem;">Loading cities...</p>
+                        </div>
                     </div>
 
                     <!-- Price Range -->
@@ -171,6 +164,8 @@ input[type="range"] {
                             <select id="sportsSort">
                                 <option value="date_asc">Date (Earliest)</option>
                                 <option value="date_desc">Date (Latest)</option>
+                                <option value="price_asc">Price (Low to High)</option>
+                                <option value="price_desc">Price (High to Low)</option>
                                 <option value="name_asc">Name (A-Z)</option>
                             </select>
                         </div>

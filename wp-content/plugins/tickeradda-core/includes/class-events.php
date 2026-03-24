@@ -132,6 +132,11 @@ class TA_Events {
         $lang     = get_post_meta( $post->ID, 'language', true );
         $teams    = get_post_meta( $post->ID, 'teams', true );
 
+        $sport_type = get_post_meta( $post->ID, 'sport_type', true );
+        $languages   = array( 'Hindi', 'English', 'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Marathi', 'Bengali', 'Punjabi', 'Gujarati', 'Other' );
+        $certs       = array( 'U', 'UA', 'A', 'S' );
+        $sport_types = array( 'Cricket', 'Football', 'Kabaddi', 'Basketball', 'Tennis', 'Hockey', 'Badminton', 'Wrestling', 'Athletics', 'Other' );
+
         wp_nonce_field( 'ta_event_meta_save', 'ta_event_meta_nonce' );
         ?>
         <div style="padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #ccd0d4;">
@@ -147,34 +152,59 @@ class TA_Events {
             </div>
             <p>
                 <label style="font-weight:600;display:block;margin-bottom:8px;">Venue / Location:</label>
-                <input type="text" name="ta_event_location" value="<?php echo esc_attr( $location ); ?>" style="width:100%;" placeholder="e.g. Jio World Garden, Mumbai">
+                <input type="text" name="ta_event_location" value="<?php echo esc_attr( $location ); ?>" style="width:100%;" placeholder="e.g. Wankhede Stadium, Mumbai">
             </p>
             <p>
                 <label style="font-weight:600;display:block;margin-bottom:8px;">Poster URL (Direct Link):</label>
                 <input type="url" name="ta_poster_url" value="<?php echo esc_attr( $poster ); ?>" style="width:100%;" placeholder="https://...">
             </p>
-            
+
             <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
-            <h4 style="margin-top:0;">Advanced Details (Movies / Sports)</h4>
-            
+            <h4 style="margin-top:0; color:#1d2327;">&#127916; Movie Details</h4>
+            <p style="color:#646970; font-size:13px; margin:-8px 0 12px;">Fill for Movie events &mdash; powers the Language &amp; Certificate filters.</p>
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
                 <p>
-                    <label>Rating (e.g. 8.5/10):</label>
-                    <input type="text" name="ta_movie_rating" value="<?php echo esc_attr( $rating ); ?>" style="width:100%;">
+                    <label style="font-weight:600;display:block;margin-bottom:8px;">IMDb Rating:</label>
+                    <input type="text" name="ta_movie_rating" value="<?php echo esc_attr( $rating ); ?>" style="width:100%;" placeholder="8.5">
                 </p>
                 <p>
-                    <label>Certificate (UA/A):</label>
-                    <input type="text" name="ta_movie_cert" value="<?php echo esc_attr( $cert ); ?>" style="width:100%;">
+                    <label style="font-weight:600;display:block;margin-bottom:8px;">Certificate:</label>
+                    <select name="ta_movie_cert" style="width:100%;padding:6px 10px;">
+                        <option value="">-- Select --</option>
+                        <?php foreach ( $certs as $c ) : ?>
+                            <option value="<?php echo esc_attr($c); ?>" <?php selected( $cert, $c ); ?>><?php echo esc_html($c); ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </p>
                 <p>
-                    <label>Language:</label>
-                    <input type="text" name="ta_language" value="<?php echo esc_attr( $lang ); ?>" style="width:100%;">
+                    <label style="font-weight:600;display:block;margin-bottom:8px;">Language:</label>
+                    <select name="ta_language" style="width:100%;padding:6px 10px;">
+                        <option value="">-- Select --</option>
+                        <?php foreach ( $languages as $l ) : ?>
+                            <option value="<?php echo esc_attr($l); ?>" <?php selected( $lang, $l ); ?>><?php echo esc_html($l); ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </p>
             </div>
-            <p>
-                <label>Teams (For Sports):</label>
-                <input type="text" name="ta_teams" value="<?php echo esc_attr( $teams ); ?>" style="width:100%;" placeholder="Team A vs Team B">
-            </p>
+
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+            <h4 style="margin-top:0; color:#1d2327;">&#127955; Sports Details</h4>
+            <p style="color:#646970; font-size:13px; margin:-8px 0 12px;">Fill for Sports events &mdash; powers the Sport Type &amp; Teams filters.</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                <p>
+                    <label style="font-weight:600;display:block;margin-bottom:8px;">Sport Type:</label>
+                    <select name="ta_sport_type" style="width:100%;padding:6px 10px;">
+                        <option value="">-- Select Sport --</option>
+                        <?php foreach ( $sport_types as $st ) : $sv = strtolower($st); ?>
+                            <option value="<?php echo esc_attr($sv); ?>" <?php selected( $sport_type, $sv ); ?>><?php echo esc_html($st); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </p>
+                <p>
+                    <label style="font-weight:600;display:block;margin-bottom:8px;">Teams (e.g. CSK vs RCB):</label>
+                    <input type="text" name="ta_teams" value="<?php echo esc_attr( $teams ); ?>" style="width:100%;" placeholder="Team A vs Team B">
+                </p>
+            </div>
         </div>
         <?php
     }
@@ -207,6 +237,9 @@ class TA_Events {
         }
         if ( isset( $_POST['ta_teams'] ) ) {
             update_post_meta( $post_id, 'teams', sanitize_text_field( $_POST['ta_teams'] ) );
+        }
+        if ( isset( $_POST['ta_sport_type'] ) ) {
+            update_post_meta( $post_id, 'sport_type', sanitize_text_field( $_POST['ta_sport_type'] ) );
         }
     }
 
@@ -416,7 +449,8 @@ class TA_Events {
             $data['movieLanguage'] = get_post_meta($post_id, 'language', true) ?: 'Hindi';
         }
         if ($post->post_type === 'sports_events') {
-            $data['teams'] = get_post_meta($post_id, 'teams', true) ?: '';
+            $data['teams']      = get_post_meta($post_id, 'teams', true) ?: '';
+            $data['sport_type'] = get_post_meta($post_id, 'sport_type', true) ?: '';
         }
 
         return $data;

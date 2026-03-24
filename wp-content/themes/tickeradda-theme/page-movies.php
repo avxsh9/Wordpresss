@@ -93,16 +93,25 @@ get_header();
                 <aside class="movies-sidebar">
                     <h3 style="margin:0 0 20px; font-size:1.1rem; color:#fff;">Filter Movies</h3>
 
-                    <!-- Languages -->
+                    <!-- Languages (built dynamically by movies.js) -->
                     <div class="filter-group">
-                        <h4>Languages</h4>
-                        <label class="filter-label"><input type="checkbox" class="lang-filter" value="hindi"> Hindi</label>
-                        <label class="filter-label"><input type="checkbox" class="lang-filter" value="english"> English</label>
-                        <label class="filter-label"><input type="checkbox" class="lang-filter" value="tamil"> Tamil</label>
-                        <label class="filter-label"><input type="checkbox" class="lang-filter" value="telugu"> Telugu</label>
+                        <h4>Language</h4>
+                        <div id="langFilters">
+                            <!-- Defaults shown while JS loads -->
+                            <label class="filter-label"><input type="checkbox" class="lang-filter" value="hindi"> Hindi</label>
+                            <label class="filter-label"><input type="checkbox" class="lang-filter" value="english"> English</label>
+                            <label class="filter-label"><input type="checkbox" class="lang-filter" value="tamil"> Tamil</label>
+                            <label class="filter-label"><input type="checkbox" class="lang-filter" value="telugu"> Telugu</label>
+                        </div>
                     </div>
 
-
+                    <!-- City (built dynamically) -->
+                    <div class="filter-group">
+                        <h4>City</h4>
+                        <div id="cityFilters">
+                            <p style="color:#666;font-size:0.85rem;">Loading cities...</p>
+                        </div>
+                    </div>
 
                     <!-- Certificate -->
                     <div class="filter-group">
@@ -110,6 +119,22 @@ get_header();
                         <label class="filter-label"><input type="checkbox" class="cert-filter" value="U"> U</label>
                         <label class="filter-label"><input type="checkbox" class="cert-filter" value="UA"> UA</label>
                         <label class="filter-label"><input type="checkbox" class="cert-filter" value="A"> A</label>
+                    </div>
+
+                    <!-- Price Range -->
+                    <div class="filter-group">
+                        <h4>Max Price (₹)</h4>
+                        <input type="range" id="priceRange" min="0" max="10000" step="500" value="10000">
+                        <div class="range-display">
+                            <span>₹0</span>
+                            <span id="priceRangeDisplay">₹10,000</span>
+                        </div>
+                    </div>
+
+                    <!-- Date -->
+                    <div class="filter-group">
+                        <h4>From Date</h4>
+                        <input type="date" id="dateFilter" style="width:100%;padding:8px 12px;background:var(--card-bg);border:1px solid var(--glass-border);border-radius:10px;color:#fff;outline:none;">
                     </div>
 
                     <button id="clearFiltersBtn" class="btn btn-outline" style="width:100%;margin-top:8px;">
@@ -138,6 +163,9 @@ get_header();
                             <span style="color:var(--text-gray);font-size:0.9rem;">Sort by:</span>
                             <select id="moviesSort">
                                 <option value="date_desc">Latest (Default)</option>
+                                <option value="date_asc">Date (Earliest)</option>
+                                <option value="price_asc">Price (Low to High)</option>
+                                <option value="price_desc">Price (High to Low)</option>
                                 <option value="name_asc">Name (A-Z)</option>
                             </select>
                         </div>
