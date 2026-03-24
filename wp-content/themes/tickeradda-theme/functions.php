@@ -208,33 +208,31 @@ add_action( 'init', function() {
     }
 } );
 
-// ── Brute-Force 404 Resolver ──────────────────────────────────────────────────
-// Intercepts categories that 404 due to CPT/Taxonomy slug conflicts
-add_action( 'template_redirect', function() {
-    if ( ! is_404() ) return;
-
-    $path = trim( parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ), '/' );
-    $parts = explode('/', $path);
-    $slug = end($parts);
-
+// ── Aggressive Template Override ─────────────────────────────────────────────
+add_filter( 'template_include', function( $template ) {
+    $uri = $_SERVER['REQUEST_URI'];
+    
     $map = array(
-        'movies'  => 'page-movies.php',
-        'sports'  => 'page-sports.php',
-        'theatre' => 'page-theatre.php',
-        'play'    => 'page-play.php',
+        '/movies/'  => 'page-movies.php',
+        '/sports/'  => 'page-sports.php',
+        '/theatre/' => 'page-theatre.php',
+        '/play/'    => 'page-play.php',
     );
 
-    if ( isset( $map[ $slug ] ) ) {
-        $file = get_template_directory() . '/' . $map[ $slug ];
-        if ( file_exists( $file ) ) {
-            global $wp_query;
-            $wp_query->is_404 = false;
-            status_header( 200 );
-            include( $file );
-            exit;
+    foreach ( $map as $path => $file_name ) {
+        if ( strpos( $uri, $path ) !== false ) {
+            $file = get_template_directory() . '/' . $file_name;
+            if ( file_exists( $file ) ) {
+                global $wp_query;
+                $wp_query->is_404 = false;
+                $wp_query->is_page = true;
+                status_header( 200 );
+                return $file;
+            }
         }
     }
-}, 1 );
+    return $template;
+}, 999 );
 
 // ── Slug Collision Protection ─────────────────────────────────────────────────
 add_filter( 'wp_unique_post_slug', function( $slug, $post_ID, $post_status, $post_type ) {
