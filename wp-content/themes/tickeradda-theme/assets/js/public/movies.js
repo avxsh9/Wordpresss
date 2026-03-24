@@ -14,8 +14,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ── Fetch all movies ──────────────────────────────────────────────────────
     try {
-        const res = await fetch(`${TA.restUrl}/events-list?category=movies&per_page=500`);
-        if (!res.ok) throw new Error('Network error: ' + res.status);
+        const timestamp = Date.now();
+        const res = await fetch(`${TA.restUrl}/events-list?category=movies&per_page=500&_t=${timestamp}`);
+        const data = await res.json(); throw new Error('Network error: ' + res.status);
         allMovies = await res.json();
         if (!Array.isArray(allMovies)) allMovies = [];
 

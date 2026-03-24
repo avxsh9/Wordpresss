@@ -125,7 +125,7 @@ add_filter( 'template_include', function( $template ) {
 
 // ── Enqueue Scripts & Styles ───────────────────────────────────────────────────
 add_action( 'wp_enqueue_scripts', function() {
-    $v   = '2.0.0';
+    $v   = '2.0.4';
     $uri = get_template_directory_uri();
 
     // Fonts & Icons

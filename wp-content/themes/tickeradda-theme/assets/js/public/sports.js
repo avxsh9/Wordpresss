@@ -14,7 +14,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ── Fetch all sports events ──────────────────────────────────────────────
     try {
-        const res = await fetch(`${TA.restUrl}/events-list?category=sports&per_page=500`);
+        const timestamp = Date.now();
+        const res = await fetch(`${TA.restUrl}/events-list?category=sports&per_page=500&_t=${timestamp}`);
         const data = await res.json();
         allSports = Array.isArray(data) ? data : [];
 

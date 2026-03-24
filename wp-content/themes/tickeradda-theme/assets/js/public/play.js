@@ -14,10 +14,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ── Fetch play/theatre/comedy shows ───────────────────────────────────────
     try {
+        const timestamp = Date.now();
         const [r1, r2, r3] = await Promise.all([
-            fetch(`${TA.restUrl}/events-list?category=theatre&per_page=500`),
-            fetch(`${TA.restUrl}/events-list?category=other&per_page=500`),
-            fetch(`${TA.restUrl}/events-list?category=comedy&per_page=500`),
+            fetch(`${TA.restUrl}/events-list?category=theatre&per_page=500&_t=${timestamp}`),
+            fetch(`${TA.restUrl}/events-list?category=other&per_page=500&_t=${timestamp}`),
+            fetch(`${TA.restUrl}/events-list?category=comedy&per_page=500&_t=${timestamp}`),
         ]);
         const t1 = await r1.json();
         const t2 = await r2.json();
