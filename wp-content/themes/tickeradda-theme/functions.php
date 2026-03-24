@@ -226,21 +226,53 @@ add_action( 'init', function() {
 // Script Enqueueing
 add_action( 'wp_enqueue_scripts', function() {
     $uri = get_template_directory_uri();
-    $v   = '1.0.3';
+    $v   = '1.0.4';
+    $path = trim( parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ), '/' );
+    $parts = explode('/', $path);
+    $slug = end($parts);
     
-    if ( is_page('movies') || is_post_type_archive('movies') ) {
+    if ( $slug === 'movies' || is_page('movies') || is_post_type_archive('movies') ) {
         wp_enqueue_script( 'ta-movies-js', $uri . '/assets/js/public/movies.js', array( 'ta-common' ), $v, true );
     }
-    if ( is_page('sports') || is_post_type_archive('sports_events') ) {
+    if ( $slug === 'sports' || is_page('sports') || is_post_type_archive('sports_events') ) {
         wp_enqueue_script( 'ta-sports-js', $uri . '/assets/js/public/sports.js', array( 'ta-common' ), $v, true );
     }
-    if ( is_page('theatre') ) {
+    if ( $slug === 'theatre' || is_page('theatre') ) {
         wp_enqueue_script( 'ta-theatre-js', $uri . '/assets/js/public/theatre.js', array( 'ta-common' ), $v, true );
     }
-    if ( is_page('play') ) {
+    if ( $slug === 'play' || is_page('play') ) {
         wp_enqueue_script( 'ta-play-js', $uri . '/assets/js/public/play.js', array( 'ta-common' ), $v, true );
     }
 }, 30 );
+
+// Robust Template Override for Categories (Fixes 404s for empty archives)
+add_filter( 'template_include', function( $template ) {
+    $path = trim( parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ), '/' );
+    $parts = explode('/', $path);
+    $slug = end($parts);
+
+    $map = array(
+        'movies'  => 'page-movies.php',
+        'sports'  => 'page-sports.php',
+        'theatre' => 'page-theatre.php',
+        'play'    => 'page-play.php',
+    );
+
+    if ( isset( $map[ $slug ] ) ) {
+        $file = get_template_directory() . '/' . $map[ $slug ];
+        if ( file_exists( $file ) ) {
+            // Force 200 OK and prevent WP from thinking it's a 404
+            global $wp_query;
+            $wp_query->is_404 = false;
+            $wp_query->is_page = true;
+            $wp_query->is_archive = false;
+            status_header( 200 );
+            return $file;
+        }
+    }
+    return $template;
+}, 999 );
+
 
 
 // 4. Force Script Enqueueing
