@@ -109,7 +109,8 @@ add_filter( 'template_include', function( $template ) {
     );
 
     foreach ( $map as $path => $tpl_file ) {
-        if ( $uri_path === $path || strpos( $uri_path, $path ) !== false ) {
+        // Only exact match. No partial matching so we don't break single event pages
+        if ( $uri_path === $path ) {
             $full_path = get_template_directory() . '/' . $tpl_file;
             if ( file_exists( $full_path ) ) {
                 global $wp_query;
