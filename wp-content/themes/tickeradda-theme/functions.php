@@ -1,57 +1,165 @@
 <?php
 /**
  * TickerAdda Theme — functions.php
- * Strictly replicates the original HTML/CSS/JS frontend environment.
+ * v2.0.0 — Self-healing category pages, bulletproof routing.
  */
 if ( ! defined( 'ABSPATH' ) ) exit;
-if ( isset( $_GET['test_deploy'] ) ) die('DEPLOYMENT_VERIFIED_1.0.7');
 
 // Disable Admin Bar for all users on frontend
-add_filter('show_admin_bar', '__return_false');
+add_filter( 'show_admin_bar', '__return_false' );
 
-// ── Theme Setup ────────────────────────────────────────────────────────────────
+// ── Theme Support ──────────────────────────────────────────────────────────────
 add_action( 'after_setup_theme', function() {
     add_theme_support( 'title-tag' );
     add_theme_support( 'post-thumbnails' );
 } );
 
+// ── Category Pages: Self-Healing Setup ────────────────────────────────────────
+// Runs on every page load. Creates the page if missing, fixes the template if wrong.
+// This fires at priority 1 so it runs before routing.
+add_action( 'init', function() {
+    if ( wp_doing_ajax() ) return; // Skip on AJAX
+
+    $categories = array(
+        'movies'  => array( 'title' => 'Movies',         'template' => 'page-movies.php' ),
+        'sports'  => array( 'title' => 'Sports Events',  'template' => 'page-sports.php' ),
+        'theatre' => array( 'title' => 'Theatre & Plays','template' => 'page-theatre.php' ),
+        'play'    => array( 'title' => 'Play',           'template' => 'page-play.php' ),
+    );
+
+    foreach ( $categories as $slug => $data ) {
+        // Search by path (slug) across all statuses
+        $page = get_page_by_path( $slug, OBJECT, 'page' );
+
+        if ( ! $page ) {
+            // Also try trashed pages
+            $trashed = get_posts( array(
+                'post_type'   => 'page',
+                'post_status' => 'trash',
+                'name'        => $slug,
+                'numberposts' => 1,
+            ) );
+            if ( $trashed ) {
+                // Untrash it and re-publish
+                wp_untrash_post( $trashed[0]->ID );
+                wp_update_post( array( 'ID' => $trashed[0]->ID, 'post_status' => 'publish', 'post_name' => $slug ) );
+                update_post_meta( $trashed[0]->ID, '_wp_page_template', $data['template'] );
+                continue;
+            }
+
+            // Create brand new page
+            $id = wp_insert_post( array(
+                'post_type'   => 'page',
+                'post_title'  => $data['title'],
+                'post_name'   => $slug,
+                'post_status' => 'publish',
+                'post_content'=> '',
+            ) );
+            if ( $id && ! is_wp_error( $id ) ) {
+                update_post_meta( $id, '_wp_page_template', $data['template'] );
+            }
+        } else {
+            // Page exists — ensure it's published with correct slug and template
+            $needs_update = false;
+            $update_args  = array( 'ID' => $page->ID );
+
+            if ( $page->post_status !== 'publish' ) {
+                $update_args['post_status'] = 'publish';
+                $needs_update = true;
+            }
+            if ( $page->post_name !== $slug ) {
+                $update_args['post_name'] = $slug;
+                $needs_update = true;
+            }
+            if ( $needs_update ) {
+                wp_update_post( $update_args );
+            }
+            // Always sync the template meta
+            update_post_meta( $page->ID, '_wp_page_template', $data['template'] );
+        }
+    }
+
+    // Flush rewrite rules only once after setup
+    if ( ! get_option( 'ta_rewrites_flushed_v2' ) ) {
+        flush_rewrite_rules();
+        update_option( 'ta_rewrites_flushed_v2', '1' );
+    }
+}, 1 );
+
+// ── Prevent slug collision: block WP from renaming our slugs to 'movies-2' etc ─
+add_filter( 'wp_unique_post_slug', function( $slug, $post_ID, $post_status, $post_type ) {
+    $protected = array( 'movies', 'sports', 'theatre', 'play' );
+    if ( $post_type === 'page' && in_array( $slug, $protected, true ) ) {
+        return $slug;
+    }
+    return $slug;
+}, 10, 4 );
+
+// ── Template Override: Load category templates by URI path ────────────────────
+// Priority 999 — runs after all other template logic.
+add_filter( 'template_include', function( $template ) {
+    $uri_path = parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
+    $uri_path = rtrim( $uri_path, '/' ) . '/'; // Normalize to always have trailing slash
+
+    $map = array(
+        '/movies/'  => 'page-movies.php',
+        '/sports/'  => 'page-sports.php',
+        '/theatre/' => 'page-theatre.php',
+        '/play/'    => 'page-play.php',
+    );
+
+    foreach ( $map as $path => $tpl_file ) {
+        if ( $uri_path === $path || strpos( $uri_path, $path ) !== false ) {
+            $full_path = get_template_directory() . '/' . $tpl_file;
+            if ( file_exists( $full_path ) ) {
+                global $wp_query;
+                $wp_query->is_404  = false;
+                $wp_query->is_page = true;
+                status_header( 200 );
+                return $full_path;
+            }
+        }
+    }
+    return $template;
+}, 999 );
+
 // ── Enqueue Scripts & Styles ───────────────────────────────────────────────────
 add_action( 'wp_enqueue_scripts', function() {
-    $v = '1.0.6'; // Persistent version across all scripts
+    $v   = '2.0.0';
     $uri = get_template_directory_uri();
 
-    // Fonts & Icons (Original)
+    // Fonts & Icons
     wp_enqueue_style( 'google-outfit', 'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap', array(), null );
-    wp_enqueue_style( 'font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css', array(), null );
+    wp_enqueue_style( 'font-awesome',  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css', array(), null );
 
-    // SweetAlert2 (Original)
+    // SweetAlert2
     wp_enqueue_script( 'sweetalert2', 'https://cdn.jsdelivr.net/npm/sweetalert2@11', array(), null, false );
 
-    // Razorpay (only on buy ticket page)
+    // Razorpay only on buy ticket page
     if ( is_page_template( 'page-buy-ticket.php' ) ) {
         wp_enqueue_script( 'razorpay-checkout', 'https://checkout.razorpay.com/v1/checkout.js', array(), null, false );
     }
 
-    // Main Styles
-    wp_enqueue_style( 'ta-main', $uri . '/assets/css/main.css', array(), $v );
+    // Main CSS
+    wp_enqueue_style( 'ta-main',       $uri . '/assets/css/main.css',       array(),         $v );
     wp_enqueue_style( 'ta-responsive', $uri . '/assets/css/responsive.css', array('ta-main'), $v );
 
+    // Page-specific CSS
     $template = get_page_template_slug();
-    
-    // Page specific CSS
-    if ( in_array( $template, array('page-login.php', 'page-register.php', 'page-forgot-password.php') ) ) {
+    if ( in_array( $template, array( 'page-login.php', 'page-register.php', 'page-forgot-password.php' ) ) ) {
         wp_enqueue_style( 'ta-auth', $uri . '/assets/css/auth.css', array('ta-main'), $v );
     }
-    if ( in_array( $template, array('page-seller-dashboard.php', 'page-kyc-verification.php', 'page-sell-ticket.php', 'page-listings.php', 'page-my-tickets.php') ) ) {
+    if ( in_array( $template, array( 'page-seller-dashboard.php', 'page-kyc-verification.php', 'page-sell-ticket.php', 'page-listings.php', 'page-my-tickets.php' ) ) ) {
         wp_enqueue_style( 'ta-seller', $uri . '/assets/css/seller.css', array('ta-main'), $v );
     }
-    if ( in_array( $template, array('page-buyer-dashboard.php', 'page-orders.php', 'page-my-tickets.php') ) ) {
+    if ( in_array( $template, array( 'page-buyer-dashboard.php', 'page-orders.php', 'page-my-tickets.php' ) ) ) {
         wp_enqueue_style( 'ta-buyer', $uri . '/assets/css/buyer.css', array('ta-main'), $v );
     }
 
-    // Original Global JS (Load in head so TA is available for fetch interceptor)
+    // Global JS (loads in <head> so TA object is available)
     wp_enqueue_script( 'ta-common', $uri . '/assets/js/common.js', array('jquery'), $v, false );
 
+    // Template-to-JS mapping
     $js_map = array(
         'page-home.php'             => 'public/home.js',
         'page-events.php'           => 'public/events.js',
@@ -76,35 +184,33 @@ add_action( 'wp_enqueue_scripts', function() {
     );
 
     if ( isset( $js_map[ $template ] ) ) {
-        wp_enqueue_script( 'ta-page-js', $uri . '/assets/js/' . $js_map[ $template ], array( 'ta-common' ), $v, true );
+        wp_enqueue_script( 'ta-page-js', $uri . '/assets/js/' . $js_map[ $template ], array('ta-common'), $v, true );
     }
 
-    // Direct check for slug-based routing (Ensures JS loads on forced templates)
-    $path = trim( parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ), '/' );
-    $parts = explode('/', $path);
-    $uri_slug = end($parts);
-    
-    if ( $uri_slug === 'movies' || is_page('movies') ) {
-        wp_enqueue_script( 'ta-movies-js-forced', $uri . '/assets/js/public/movies.js', array( 'ta-common' ), $v, true );
-    }
-    if ( $uri_slug === 'sports' || is_page('sports') ) {
-        wp_enqueue_script( 'ta-sports-js-forced', $uri . '/assets/js/public/sports.js', array( 'ta-common' ), $v, true );
-    }
-    if ( $uri_slug === 'theatre' || is_page('theatre') ) {
-        wp_enqueue_script( 'ta-theatre-js-forced', $uri . '/assets/js/public/theatre.js', array( 'ta-common' ), $v, true );
-    }
-    if ( $uri_slug === 'play' || is_page('play') ) {
-        wp_enqueue_script( 'ta-play-js-forced', $uri . '/assets/js/public/play.js', array( 'ta-common' ), $v, true );
+    // Force-enqueue JS for category pages by URI — ensures JS loads even on routing overrides
+    $uri_path = trim( parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ), '/' );
+    $slug_js_map = array(
+        'movies'  => 'public/movies.js',
+        'sports'  => 'public/sports.js',
+        'theatre' => 'public/theatre.js',
+        'play'    => 'public/play.js',
+    );
+    foreach ( $slug_js_map as $cat_slug => $js_file ) {
+        if ( $uri_path === $cat_slug || $template === 'page-' . $cat_slug . '.php' || is_page( $cat_slug ) ) {
+            $handle = 'ta-' . $cat_slug . '-js';
+            if ( ! wp_script_is( $handle, 'enqueued' ) && ! wp_script_is( 'ta-page-js', 'enqueued' ) ) {
+                wp_enqueue_script( $handle, $uri . '/assets/js/' . $js_file, array('ta-common'), $v, true );
+            }
+        }
     }
 
-    // Pass data...
+    // Pass TA object to JS
     $current_user_data = null;
     if ( is_user_logged_in() ) {
-        $user = wp_get_current_user();
+        $user  = wp_get_current_user();
         $roles = $user->roles;
         $role  = 'both';
         if ( in_array( 'administrator', $roles, true ) ) $role = 'admin';
-
         $phone = get_user_meta( $user->ID, 'ta_phone', true );
         $current_user_data = array(
             'id'              => $user->ID,
@@ -118,17 +224,17 @@ add_action( 'wp_enqueue_scripts', function() {
     }
 
     wp_localize_script( 'ta-common', 'TA', array(
-        'ajaxUrl'   => esc_url_raw( admin_url( 'admin-ajax.php' ) ),
-        'restUrl'   => esc_url_raw( rest_url( 'tickeradda/v2' ) ),
-        'nonce'     => wp_create_nonce( 'wp_rest' ),
-        'tmdbNonce' => wp_create_nonce( 'ta_tmdb_nonce' ),
+        'ajaxUrl'        => esc_url_raw( admin_url( 'admin-ajax.php' ) ),
+        'restUrl'        => esc_url_raw( rest_url( 'tickeradda/v2' ) ),
+        'nonce'          => wp_create_nonce( 'wp_rest' ),
+        'tmdbNonce'      => wp_create_nonce( 'ta_tmdb_nonce' ),
         'sellMovieNonce' => wp_create_nonce( 'ta_sell_movie_nonce' ),
         'sellSportNonce' => wp_create_nonce( 'ta_sell_sport_nonce' ),
-        'homeUrl'   => esc_url( home_url( '/' ) ),
-        'themeUrl'  => get_template_directory_uri(),
-        'user'      => $current_user_data,
-        'loggedIn'  => is_user_logged_in(),
-        'rzpKeyId'  => esc_html( get_option( 'ta_razorpay_key_id', 'rzp_test_SQ0ySa9NBL4rWx' ) ),
+        'homeUrl'        => esc_url( home_url( '/' ) ),
+        'themeUrl'       => get_template_directory_uri(),
+        'user'           => $current_user_data,
+        'loggedIn'       => is_user_logged_in(),
+        'rzpKeyId'       => esc_html( get_option( 'ta_razorpay_key_id', 'rzp_test_SQ0ySa9NBL4rWx' ) ),
     ) );
 } );
 
@@ -150,15 +256,11 @@ add_action( 'template_redirect', function() {
     );
 
     $slug = get_page_template_slug();
-    
     if ( in_array( $slug, $protected_templates, true ) && ! is_user_logged_in() ) {
-        $login_url = home_url( '/login/' );
+        $login_url   = home_url( '/login/' );
         $current_url = home_url( add_query_arg( array(), $wp->request ) );
-        if ( ! empty( $_SERVER['QUERY_STRING'] ) ) {
-            $current_url .= '?' . $_SERVER['QUERY_STRING'];
-        }
-        $login_url = add_query_arg( 'redirect_to', urlencode( $current_url ), $login_url );
-        wp_redirect( $login_url );
+        if ( ! empty( $_SERVER['QUERY_STRING'] ) ) $current_url .= '?' . $_SERVER['QUERY_STRING'];
+        wp_redirect( add_query_arg( 'redirect_to', urlencode( $current_url ), $login_url ) );
         exit;
     }
 
@@ -174,75 +276,12 @@ add_action( 'template_redirect', function() {
     }
 } );
 
-// ── REST API Config ───────────────────────────────────────────────────────────
+// ── REST API ──────────────────────────────────────────────────────────────────
 add_filter( 'rest_authentication_errors', function( $result ) {
     if ( ! empty( $result ) ) return $result;
     return $result;
 } );
 
-// ── Category Page Setup ───────────────────────────────────────────────────────
-add_action( 'init', function() {
-    $pages_to_create = array(
-        'movies'  => array( 'title' => 'Movies',  'template' => 'page-movies.php' ),
-        'sports'  => array( 'title' => 'Sports',  'template' => 'page-sports.php' ),
-        'theatre' => array( 'title' => 'Theatre', 'template' => 'page-theatre.php' ),
-        'play'    => array( 'title' => 'Play',    'template' => 'page-play.php' ),
-    );
-
-    foreach ( $pages_to_create as $slug => $data ) {
-        if ( ! get_page_by_path( $slug ) ) {
-            $page_id = wp_insert_post( array(
-                'post_title'   => $data['title'],
-                'post_name'    => $slug,
-                'post_status'  => 'publish',
-                'post_type'    => 'page',
-            ) );
-            if ( $page_id ) update_post_meta( $page_id, '_wp_page_template', $data['template'] );
-        } else {
-            $page = get_page_by_path( $slug );
-            update_post_meta( $page->ID, '_wp_page_template', $data['template'] );
-            // Ensure slug is exactly what we want (not movies-2)
-            if ( $page->post_name !== $slug ) {
-                wp_update_post( array( 'ID' => $page->ID, 'post_name' => $slug ) );
-            }
-        }
-    }
-} );
-
-// ── Aggressive Template Override ─────────────────────────────────────────────
-add_filter( 'template_include', function( $template ) {
-    $uri = $_SERVER['REQUEST_URI'];
-    
-    $map = array(
-        '/movies/'  => 'page-movies.php',
-        '/sports/'  => 'page-sports.php',
-        '/theatre/' => 'page-theatre.php',
-        '/play/'    => 'page-play.php',
-    );
-
-    foreach ( $map as $path => $file_name ) {
-        if ( strpos( $uri, $path ) !== false ) {
-            $file = get_template_directory() . '/' . $file_name;
-            if ( file_exists( $file ) ) {
-                global $wp_query;
-                $wp_query->is_404 = false;
-                $wp_query->is_page = true;
-                status_header( 200 );
-                return $file;
-            }
-        }
-    }
-    return $template;
-}, 999 );
-
-// ── Slug Collision Protection ─────────────────────────────────────────────────
-add_filter( 'wp_unique_post_slug', function( $slug, $post_ID, $post_status, $post_type ) {
-    if ( $post_type === 'page' && in_array( $slug, ['movies', 'sports', 'theatre', 'play'] ) ) {
-        return $slug; 
-    }
-    return $slug;
-}, 10, 4 );
-
-// Cleanup
+// ── Performance: Remove unused WP head items ──────────────────────────────────
 remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
 remove_action( 'wp_print_styles', 'print_emoji_styles' );

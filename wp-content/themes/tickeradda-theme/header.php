@@ -114,9 +114,9 @@ if ( is_user_logged_in() ) {
             </button>
             <div class="nav-links" id="navLinks">
                 <a href="<?php echo esc_url( home_url( '/events/' ) ); ?>" class="nav-link">Events</a>
-                <a href="<?php echo esc_url( home_url( '/events/?category=movies' ) ); ?>" class="nav-link">Movies</a>
-                <a href="<?php echo esc_url( home_url( '/events/?category=sports' ) ); ?>" class="nav-link">Sports</a>
-                <a href="<?php echo esc_url( home_url( '/events/?category=theatre' ) ); ?>" class="nav-link">Theatre</a>
+                <a href="<?php echo esc_url( home_url( '/movies/' ) ); ?>" class="nav-link">Movies</a>
+                <a href="<?php echo esc_url( home_url( '/sports/' ) ); ?>" class="nav-link">Sports</a>
+                <a href="<?php echo esc_url( home_url( '/theatre/' ) ); ?>" class="nav-link">Theatre</a>
                 <a href="<?php echo esc_url( home_url( '/seller-dashboard/' ) ); ?>" class="nav-link" id="dashboardLink" style="<?php echo is_user_logged_in() ? 'display: inline-block;' : 'display: none;'; ?>">My Listings</a>
                 <a href="<?php echo esc_url( home_url( '/buyer-dashboard-2/' ) ); ?>" class="nav-link" id="myTicketsLink" style="<?php echo is_user_logged_in() ? 'display: inline-block;' : 'display: none;'; ?>">My Requests</a>
                 <a href="<?php echo esc_url( home_url( '/calculator/' ) ); ?>" class="nav-link">Calculator</a>
