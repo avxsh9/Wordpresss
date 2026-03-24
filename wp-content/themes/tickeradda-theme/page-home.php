@@ -13,6 +13,72 @@ header( 'Expires: 0' );
 get_header();
 ?>
 
+<style>
+/* Sports Filter (Homepage Only) */
+.sports-section .category-pill-small {
+    padding: 8px 18px;
+    border-radius: 30px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #a1a1aa;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+}
+.sports-section .category-pill-small:hover {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    border-color: rgba(255,255,255,0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+.sports-section .category-pill-small.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+/* Trust Section (Pre-footer) Enhancements */
+.trust-section {
+    padding: 80px 0;
+    background: linear-gradient(to bottom, transparent, rgba(59, 130, 246, 0.05));
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+.trust-section .section-title h2 {
+    font-size: 2.2rem;
+    margin-bottom: 40px;
+}
+.trust-section .feature-box {
+    padding: 40px 30px;
+    text-align: center;
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    transition: transform 0.3s;
+}
+.trust-section .feature-box:hover {
+    transform: translateY(-5px);
+}
+.trust-section .feature-icon {
+    font-size: 2.5rem;
+    color: var(--primary);
+    margin-bottom: 20px;
+}
+.trust-section .feature-title {
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+.trust-section .feature-desc {
+    color: var(--text-gray);
+    line-height: 1.6;
+    font-size: 1rem;
+}
+</style>
+
 <main id="main">
 <section class="hero">
         <div class="hero-content">

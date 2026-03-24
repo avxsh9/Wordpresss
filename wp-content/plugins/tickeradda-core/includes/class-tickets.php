@@ -140,6 +140,7 @@ class TA_Tickets {
         $venue       = isset( $_POST['venue'] )        ? sanitize_text_field( wp_unslash( $_POST['venue'] ) )     : '';
         $description = isset( $_POST['description'] )  ? sanitize_textarea_field( wp_unslash( $_POST['description'] ) ) : '';
         $agreement   = isset( $_POST['agreement'] )    ? absint( $_POST['agreement'] )                           : 0;
+        $movie_lang  = isset( $_POST['movieLanguage'] )? sanitize_text_field( wp_unslash( $_POST['movieLanguage'] ) ) : '';
 
         // Validate required fields with granular errors
         // Note: eventDate and eventTime are optional (e.g. movies have variable screening times)
@@ -222,6 +223,9 @@ class TA_Tickets {
                     update_post_meta( $event_id, 'event_date', $event_date );
                     update_post_meta( $event_id, 'event_time', $event_time );
                     update_post_meta( $event_id, 'event_location', $venue );
+                    if ( $type === 'movies' && $movie_lang ) {
+                        update_post_meta( $event_id, 'language', $movie_lang );
+                    }
                     
                     if ( $section ) {
                         wp_set_object_terms( $event_id, $section, 'event_cat' );
@@ -229,6 +233,11 @@ class TA_Tickets {
                 } else {
                     $event_id = null; // Fallback
                 }
+            }
+        } else {
+            // Update existing event if it is a movie and language is provided
+            if ( $type === 'movies' && $movie_lang ) {
+                update_post_meta( $event_id, 'language', $movie_lang );
             }
         }
 

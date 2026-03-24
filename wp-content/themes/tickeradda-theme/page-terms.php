@@ -18,7 +18,7 @@ get_header();
                 <p>All users must undergo Aadhaar KYC to list tickets. Sellers are responsible for the authenticity of the tickets they provide.</p>
 
                 <h3>3. Fees</h3>
-                <p>TickerAdda is currently a free-to-use platform. We do not charge any platform fees for successful transactions right now. Enjoy the full value for your tickets!</p>
+                <p>TickerAdda currently charges no commission. We do not charge any platform fees for successful transactions right now. Enjoy the full value for your tickets!</p>
 
                 <h3>4. Cancellation</h3>
                 <p>Once a purchase is confirmed, it is generally non-refundable unless the event is cancelled or the ticket is found to be invalid.</p>

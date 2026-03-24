@@ -43,7 +43,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         };
 
-        const events = await fetchJSON(`${TA.restUrl}/events-list?per_page=100`);
+        const timestamp = Date.now();
+        const events = await fetchJSON(`${TA.restUrl}/events-list?per_page=100&_t=${timestamp}`);
 
         allEventsCached = Array.isArray(events) ? events : [];
         console.log(`TickerAdda Home: Loaded ${allEventsCached.length} events.`);
@@ -62,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     ? allEventsCached 
                     : allEventsCached.filter(e => e.category_slug === cat || e.category === cat);
                 
-                renderEventGrid(trendingGrid, filtered.slice(0, 8));
+                renderEventGrid(trendingGrid, filtered.slice(0, 4));
             });
         });
 
@@ -74,11 +75,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const sub = pill.getAttribute('data-sports-category');
                 
                 const sportsOnly = allEventsCached.filter(e => e.category_slug === 'sports');
+                const SPORT_KEYWORDS = {
+                    cricket:  ['ipl','cricket','test','odi','rcb','csk','mi','kkr','srh','gt','pk','dc','rr','lsg'],
+                    football: ['isl','football','fc','united','city','fc goa','blasters','bengaluru fc'],
+                    kabaddi:  ['kabaddi','pro kabaddi','pkl'],
+                    basketball:['nba','basketball'],
+                    tennis:   ['tennis','atp','wta'],
+                    hockey:   ['hockey','nhl'],
+                };
+                
                 const filtered = sub === 'all' 
                     ? sportsOnly 
                     : sportsOnly.filter(e => {
                         const combined = (e.name + (e.teams?' '+e.teams:'')).toLowerCase();
-                        return combined.includes(sub.toLowerCase());
+                        const kws = SPORT_KEYWORDS[sub.toLowerCase()] || [sub.toLowerCase()];
+                        return kws.some(kw => combined.includes(kw));
                     });
                 
                 renderEventGrid(sportsGrid, filtered.slice(0, 4));
@@ -100,8 +111,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function distributeAndRender() {
-        // Trending: Just show first 8 for 'all'
-        renderEventGrid(trendingGrid, allEventsCached.slice(0, 8));
+        // Trending: Just show first 4 for 'all'
+        renderEventGrid(trendingGrid, allEventsCached.slice(0, 4));
 
         // Sports Section
         const sports = allEventsCached.filter(e => e.category_slug === 'sports');
@@ -159,7 +170,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             </div>
                         </div>
                         <div class="event-card-actions">
-                            <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'"><i class="fas fa-ticket-alt"></i> Get For Free</button>
+                            <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'"><i class="fas fa-ticket-alt"></i> Buy Ticket</button>
                             <button class="card-btn-secondary" onclick="event.stopPropagation(); window.location.href='${sellUrl}'">
                                 <i class="fas fa-plus-circle"></i> Sell Tickets
                             </button>
@@ -184,7 +195,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                     </div>
                     <div class="event-card-actions">
-                        <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'"><i class="fas fa-ticket-alt"></i> Get For Free</button>
+                        <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'"><i class="fas fa-ticket-alt"></i> Buy Ticket</button>
                         <button class="card-btn-secondary" onclick="event.stopPropagation(); window.location.href='${sellUrl}'">
                             <i class="fas fa-plus-circle"></i> Sell Tickets
                         </button>

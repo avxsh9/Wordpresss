@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
         initials.forEach(el => el.textContent = (TA.user.name || 'U').charAt(0).toUpperCase());
 
         // Mandatory Phone check (especially for Google users)
-        if (TA.user.isPhoneRequired && !sessionStorage.getItem('phone_prompt_dismissed')) {
+        if (TA.user.isPhoneRequired) {
             // Wait a second to not overwhelm immediately on load
             setTimeout(promptForPhone, 1500);
         }
@@ -54,8 +54,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 async function syncAuth() {
     try {
-        // Fetch fresh status from REST API (cache-busted automatically by our fetch interceptor)
-        const res = await fetch(TA.restUrl + '/auth/me');
+        const timestamp = Date.now();
+        const res = await fetch(`${TA.restUrl}/auth/me?_t=${timestamp}`);
         if (!res.ok) return;
         
         const freshUser = await res.json();
@@ -71,7 +71,7 @@ async function syncAuth() {
             checkAuthStatus();
             
             // If we just found out we are logged in, maybe show phone prompt
-            if (isLoggedInNow && TA.user.isPhoneRequired && !sessionStorage.getItem('phone_prompt_dismissed')) {
+            if (isLoggedInNow && TA.user.isPhoneRequired) {
                 setTimeout(promptForPhone, 1000);
             }
         }
@@ -264,59 +264,73 @@ function getIcon(type) {
     return icons[type] || 'calendar-star';
 }
 
-async function promptForPhone() {
-    const { value: phone } = await Swal.fire({
-        title: 'Mobile Number Required',
-        text: 'Please provide your 10-digit mobile number to continue. This is mandatory for selling tickets.',
-        input: 'tel',
-        inputLabel: 'Mobile Number',
-        inputPlaceholder: 'e.g. 9876543210',
-        background: '#18181b', color: '#fff',
-        confirmButtonText: 'Save Number',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        inputValidator: (value) => {
-            if (!value || value.length < 10) {
-                return 'Please enter a valid 10-digit number!';
-            }
-        }
-    });
+let isPhonePromptActive = false;
 
-    if (phone) {
-        sessionStorage.setItem('phone_prompt_dismissed', '1'); // Don't ask again this session
-        try {
-            const res = await fetch(TA.restUrl + '/auth/phone', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-WP-Nonce': TA.nonce
-                },
-                body: JSON.stringify({ phone })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                Swal.fire({
-                    title: 'Saved!',
-                    text: 'Your number has been updated.',
-                    icon: 'success',
-                    background: '#18181b', color: '#fff'
-                }).then(() => {
+async function promptForPhone() {
+    if (isPhonePromptActive) return;
+    isPhonePromptActive = true;
+
+    while (true) {
+        const { value: phone, isDismissed } = await Swal.fire({
+            title: 'Mobile Number Required',
+            text: 'Please provide your 10-digit mobile number to continue. This is mandatory for selling tickets.',
+            input: 'tel',
+            inputLabel: 'Mobile Number',
+            inputPlaceholder: 'e.g. 9876543210',
+            background: '#18181b', color: '#fff',
+            confirmButtonText: 'Save Number',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            inputValidator: (value) => {
+                if (!value || value.length < 10) {
+                    return 'Please enter a valid 10-digit number!';
+                }
+            }
+        });
+
+        if (phone) {
+            try {
+                Swal.showLoading();
+                const res = await fetch(TA.restUrl + '/auth/phone', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': TA.nonce
+                    },
+                    body: JSON.stringify({ phone })
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    await Swal.fire({
+                        title: 'Saved!',
+                        text: 'Your number has been updated.',
+                        icon: 'success',
+                        background: '#18181b', color: '#fff'
+                    });
+                    
                     TA.user.phone = phone;
                     TA.user.isPhoneRequired = false;
-                    // If on sell page, it might need reload
+                    isPhonePromptActive = false;
+                    
                     if (window.location.href.includes('sell-ticket')) {
                         location.reload();
                     }
-                });
-            } else {
-                Swal.fire('Error', data.message || 'Failed to update phone number.', 'error');
+                    return; // Exit loop
+                } else {
+                    await Swal.fire('Error', data.message || 'Failed to update phone number.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                await Swal.fire('Error', 'Server error.', 'error');
             }
-        } catch (err) {
-            console.error(err);
-            Swal.fire('Error', 'Server error.', 'error');
+        } else {
+            await Swal.fire({
+                title: 'Required',
+                text: 'Mobile number is mandatory.',
+                icon: 'error',
+                background: '#18181b', color: '#fff'
+            });
         }
-    } else {
-        // If they cancelled or closed without value (though allowOutsideClick is false)
-        sessionStorage.setItem('phone_prompt_dismissed', '1');
     }
 }

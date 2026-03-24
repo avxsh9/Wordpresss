@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             </div>
                         </div>
                         <div class="event-card-actions">
-                            <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'"><i class="fas fa-ticket-alt"></i> Get For Free</button>
+                            <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'"><i class="fas fa-ticket-alt"></i> Buy Ticket</button>
                             <button class="card-btn-secondary" onclick="event.stopPropagation(); window.location.href='${sellUrl}'">
                                 <i class="fas fa-plus-circle"></i> Sell Tickets
                             </button>
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                     </div>
                     <div class="event-card-actions">
-                        <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'"><i class="fas fa-ticket-alt"></i> Get For Free</button>
+                        <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'"><i class="fas fa-ticket-alt"></i> Buy Ticket</button>
                         <button class="card-btn-secondary" onclick="event.stopPropagation(); window.location.href='${sellUrl}'">
                             <i class="fas fa-plus-circle"></i> Sell Tickets
                         </button>

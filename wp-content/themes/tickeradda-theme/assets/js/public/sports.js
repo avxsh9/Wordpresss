@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         allSports.forEach(e => {
             if (e.location) {
                 // Extract city from location (usually "Stadium, City" format)
-                const parts = e.location.split(',');
+                const parts = String(e.location).split(',');
                 const city  = parts[parts.length - 1].trim().toLowerCase();
                 if (city.length > 2 && city.length < 30) citySet.add(city);
             }
@@ -249,7 +249,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const priceTag = event.price > 0
                 ? `<span class="price-tag">From ₹${event.price.toLocaleString('en-IN')}</span>`
-                : `<span class="price-tag free-tag"><i class="fas fa-gift"></i> Free</span>`;
+                : ``;
 
             const sellUrl = `${TA.homeUrl}sell-ticket/?event_id=${event.id}&event_name=${encodeURIComponent(event.name)}&category=sports&venue=${encodeURIComponent(event.location||'')}&date=${event.date||''}&time=${encodeURIComponent(event.time||'')}`;
 
@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                     </div>
                     <div class="event-card-actions">
-                        <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'"><i class="fas fa-ticket-alt"></i> Get For Free</button>
+                        <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'"><i class="fas fa-ticket-alt"></i> Buy Ticket</button>
                         <button class="card-btn-secondary" onclick="event.stopPropagation(); window.location.href='${sellUrl}'"><i class="fas fa-plus-circle"></i> Sell Tickets</button>
                     </div>
                 </div>

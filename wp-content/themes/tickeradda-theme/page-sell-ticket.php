@@ -66,6 +66,24 @@ get_header();
                             <option value="other">Other Events</option>
                         </select>
                     </div>
+
+                    <div id="movieLanguageContainer" style="margin-bottom: 25px; display: none;">
+                        <label style="display: block; color: var(--text-gray); margin-bottom: 10px;">Language (For Movies Only)</label>
+                        <select id="ticketLanguage" name="movieLanguage" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: white; appearance: none;">
+                            <option value="">-- Select Language --</option>
+                            <option value="Hindi">Hindi</option>
+                            <option value="English">English</option>
+                            <option value="Tamil">Tamil</option>
+                            <option value="Telugu">Telugu</option>
+                            <option value="Kannada">Kannada</option>
+                            <option value="Malayalam">Malayalam</option>
+                            <option value="Marathi">Marathi</option>
+                            <option value="Bengali">Bengali</option>
+                            <option value="Punjabi">Punjabi</option>
+                            <option value="Gujarati">Gujarati</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
                     <div style="margin-bottom: 25px;">
                         <label style="display: block; color: var(--text-gray); margin-bottom: 10px;">Venue</label>
                         <input type="text" id="ticketVenue" placeholder="e.g. Narendra Modi Stadium"

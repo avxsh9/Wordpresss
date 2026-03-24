@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const citySet = new Set();
         allShows.forEach(e => {
             if (e.location) {
-                const parts = e.location.split(',');
+                const parts = String(e.location).split(',');
                 const city  = parts[parts.length - 1].trim();
                 if (city.length > 1 && city.length < 30) citySet.add(city.charAt(0).toUpperCase() + city.slice(1).toLowerCase());
             }
@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const priceTag = event.price > 0
                 ? `<span class="price-tag">From ₹${event.price.toLocaleString('en-IN')}</span>`
-                : `<span class="price-tag free-tag"><i class="fas fa-gift"></i> Free</span>`;
+                : ``;
 
             const tickets = event.ticketCount > 0
                 ? `<span style="color:#10b981;"><i class="fas fa-ticket-alt"></i> ${event.ticketCount} available</span>` : '';
@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                     </div>
                     <div class="event-card-actions">
-                        <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'"><i class="fas fa-ticket-alt"></i> Get For Free</button>
+                        <button class="card-btn-primary" onclick="event.stopPropagation(); window.location.href='${event.url}'"><i class="fas fa-ticket-alt"></i> Buy Ticket</button>
                         <button class="card-btn-secondary" onclick="event.stopPropagation(); window.location.href='${sellUrl}'"><i class="fas fa-plus-circle"></i> Sell Tickets</button>
                     </div>
                 </div>

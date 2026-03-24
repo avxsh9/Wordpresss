@@ -88,8 +88,8 @@ get_header();
                 </div>
                 <div class="card" style="padding: 30px; border: 2px solid var(--primary); background: rgba(59, 130, 246, 0.05);">
                     <div style="text-align: center; margin-bottom: 25px;">
-                        <span class="badge badge-primary" style="font-size: 1rem; padding: 8px 15px;">FREE SERVICE</span>
-                        <h3 style="margin-top: 15px; color: #fff;">TicketAdda is Free for now!</h3>
+                        <span class="badge badge-primary" style="font-size: 1rem; padding: 8px 15px;">ZERO COMMISSION</span>
+                        <h3 style="margin-top: 15px; color: #fff;">TicketAdda charges Zero Commission!</h3>
                         <p style="color: var(--text-gray); font-size: 0.95rem;">You can enjoy the platform and contact the seller directly without any fees.</p>
                     </div>
 
@@ -114,7 +114,7 @@ get_header();
                         <i class="fas fa-phone-alt"></i> Contact Seller Directly
                     </button>
                     <p style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: var(--text-gray);">
-                        TicketAdda is currently free. Please contact the seller directly to complete the transfer and payment.
+                        TicketAdda currently charges no commission. Please contact the seller directly to complete the transfer and payment.
                     </p>
                 </div>
 

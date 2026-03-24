@@ -126,7 +126,7 @@ add_filter( 'template_include', function( $template ) {
 
 // ── Enqueue Scripts & Styles ───────────────────────────────────────────────────
 add_action( 'wp_enqueue_scripts', function() {
-    $v   = '2.0.4';
+    $v   = '2.0.7';
     $uri = get_template_directory_uri();
 
     // Fonts & Icons
@@ -164,6 +164,7 @@ add_action( 'wp_enqueue_scripts', function() {
     $js_map = array(
         'page-home.php'             => 'public/home.js',
         'page-events.php'           => 'public/events.js',
+        'archive-events.php'        => 'public/events.js',
         'page-movies.php'           => 'public/movies.js',
         'page-sports.php'           => 'public/sports.js',
         'page-theatre.php'          => 'public/theatre.js',
@@ -195,6 +196,7 @@ add_action( 'wp_enqueue_scripts', function() {
         'sports'  => 'public/sports.js',
         'theatre' => 'public/theatre.js',
         'play'    => 'public/play.js',
+        'events'  => 'public/events.js',
     );
     foreach ( $slug_js_map as $cat_slug => $js_file ) {
         if ( $uri_path === $cat_slug || $template === 'page-' . $cat_slug . '.php' || is_page( $cat_slug ) ) {

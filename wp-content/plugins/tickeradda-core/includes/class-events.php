@@ -340,9 +340,31 @@ class TA_Events {
         );
 
         if ( $category && $category !== 'all' ) {
-            // Handle special category slugs mapped to post types
             if ( $category === 'sports' ) {
-                $args['post_type'] = array( 'sports_events' );
+                $sports_args = array(
+                    'post_type'      => 'sports_events',
+                    'posts_per_page' => -1,
+                    'post_status'    => 'publish',
+                );
+                $sports_query = new WP_Query( $sports_args );
+                if ( $sports_query->have_posts() ) {
+                    while ( $sports_query->have_posts() ) {
+                        $sports_query->the_post();
+                        $events[] = $this->format_event( get_post() );
+                    }
+                }
+                wp_reset_postdata();
+
+                $args['post_type'] = 'events';
+                $args['tax_query'] = array(
+                    array(
+                        'taxonomy' => 'event_cat',
+                        'field'    => 'slug',
+                        'terms'    => array( 'sports', 'sport', 'cricket', 'football', 'kabaddi' ),
+                        'operator' => 'IN',
+                        'include_children' => true,
+                    ),
+                );
             } elseif ( $category === 'movies' ) {
                 // Movies: both dedicated post type AND events with movies tax term
                 $args['post_type'] = array( 'movies', 'events' );
@@ -503,15 +525,31 @@ class TA_Events {
 
         // Category Name
         $cats = get_the_terms($post_id, 'event_cat');
-        $category_name = !empty($cats) ? $cats[0]->name : 'Event';
-        $category_slug = !empty($cats) ? $cats[0]->slug : 'event';
+        $category_name = (!empty($cats) && !is_wp_error($cats)) ? $cats[0]->name : '';
+        $category_slug = (!empty($cats) && !is_wp_error($cats)) ? $cats[0]->slug : '';
+
+        // Auto-assign category slug based on post_type if taxonomy empty or generic
+        if ( empty($category_slug) || $category_slug === 'event' || $category_slug === 'events' ) {
+            if ($post->post_type === 'movies') {
+                $category_slug = 'movies';
+                $category_name = $category_name ?: 'Movies';
+            } elseif ($post->post_type === 'sports_events') {
+                $category_slug = 'sports';
+                $category_name = $category_name ?: 'Sports';
+            } else {
+                $category_slug = 'event';
+                $category_name = $category_name ?: 'Event';
+            }
+        }
+        
+        $category_name = $category_name ?: 'Event';
 
         $data = array(
             'id'          => $post_id,
             'name'        => get_the_title($post_id),
             'url'         => get_permalink($post_id),
             'image'       => $thumbnail,
-            'location'    => get_post_meta($post_id, 'venue', true) ?: get_post_meta($post_id, 'location', true) ?: 'Venue TBD',
+            'location'    => get_post_meta($post_id, 'event_location', true) ?: get_post_meta($post_id, 'venue', true) ?: get_post_meta($post_id, 'location', true) ?: 'Venue TBD',
             'date'        => get_post_meta($post_id, 'date', true) ?: get_post_meta($post_id, 'event_date', true) ?: '',
             'time'        => get_post_meta($post_id, 'time', true) ?: get_post_meta($post_id, 'event_time', true) ?: '',
             'price'       => (float) $min_price,

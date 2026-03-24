@@ -15,16 +15,28 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventSelection();
     setupManualListing();
 
+    // Setup Category change listener
+    const categoryEl = document.getElementById('ticketCategory');
+    if (categoryEl) {
+        categoryEl.addEventListener('change', () => {
+            const langContainer = document.getElementById('movieLanguageContainer');
+            if (langContainer) {
+                langContainer.style.display = (categoryEl.value === 'movies') ? 'block' : 'none';
+            }
+        });
+    }
+
     async function checkKycStatus() {
         console.log('[KYC Check] Initiating verification status check...');
         try {
-            const res = await fetch(TA.restUrl + '/auth/me', {
+            const timestamp = Date.now();
+            const res = await fetch(`${TA.restUrl}/auth/me?_t=${timestamp}`, {
                 headers: { 'X-WP-Nonce': TA.nonce }
             });
             const user = await res.json();
             
             // First check: Phone Number (Mandatory for Google users)
-            if (user.isPhoneRequired && !sessionStorage.getItem('phone_prompt_dismissed')) {
+            if (user.isPhoneRequired) {
                 Swal.fire({
                     title: 'Phone Number Required',
                     text: 'You must provide a mobile number before you can list tickets.',
@@ -116,6 +128,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 categoryEl.value = isMovie ? 'movies' : event.category.toLowerCase();
                 categoryEl.disabled = true;
                 categoryEl.style.opacity = '0.7';
+                
+                const langContainer = document.getElementById('movieLanguageContainer');
+                if (langContainer) langContainer.style.display = isMovie ? 'block' : 'none';
             }
             
             if (isMovie) {
@@ -172,7 +187,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (eventIdEl) eventIdEl.value = selected.id;
                 
                 const isMovie = (selected.category && selected.category.toLowerCase() === 'movies');
-                if (categoryEl) categoryEl.value = isMovie ? 'movies' : selected.category.toLowerCase();
+                if (categoryEl) {
+                    categoryEl.value = isMovie ? 'movies' : selected.category.toLowerCase();
+                    const langContainer = document.getElementById('movieLanguageContainer');
+                    if (langContainer) langContainer.style.display = isMovie ? 'block' : 'none';
+                }
 
                 const timeInput = document.getElementById('ticketEventTime');
 
@@ -317,6 +336,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const section = sectionEl ? sectionEl.value : '';
 
             const isMovie = category === 'movies';
+            const languageEl = document.getElementById('ticketLanguage');
+            const language = languageEl ? languageEl.value : '';
 
             // For non-movie events, date and time are required (they have fixed show times)
             // For movies, date/time can be blank since screenings vary by cinema
@@ -327,6 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!venue && !isMovie)     missingFields.push('Venue');
             if (!eventDate && !isMovie) missingFields.push('Event Date');
             if (!eventTime && !isMovie) missingFields.push('Event Time');
+            if (isMovie && !language)   missingFields.push('Language');
 
             if (missingFields.length > 0) {
                 if (typeof Swal !== 'undefined') {
@@ -379,6 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append('venue', venue);
                 formData.append('quantity', quantity);
                 formData.append('price', price);
+                formData.append('movieLanguage', language);
                 formData.append('paymentProof', paymentProofFile.files[0]);
                 formData.append('agreement', agreementCheckbox.checked ? '1' : '0');
 

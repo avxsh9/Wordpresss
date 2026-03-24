@@ -45,7 +45,7 @@
                     <li><a href="https://www.instagram.com/ticketadda.in/" target="_blank"><i class="fab fa-instagram"></i> Instagram</a></li>
                     <li><a href="https://x.com/ticketadda" target="_blank"><i class="fa-brands fa-twitter"></i> Twitter</a></li>
                     <li><a href="https://www.linkedin.com/company/ticketadda/" target="_blank"><i class="fab fa-linkedin"></i> LinkedIn</a></li>
-                    <li><a href="#" style="pointer-events: none; opacity: 0.6;"><i class="fab fa-facebook"></i> Facebook</a></li>
+
                 </ul>
             </div>
         </div>

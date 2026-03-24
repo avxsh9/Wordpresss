@@ -52,10 +52,10 @@
 
                 <div style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 12px 20px; margin-bottom: 25px; display: inline-flex; align-items: center; gap: 12px;">
                     <i class="fas fa-info-circle" style="color: var(--primary);"></i>
-                    <span style="font-size: 0.9rem; color: #fff;">TicketAdda is currently <strong>FREE</strong> for all users. No service fees!</span>
+                    <span style="font-size: 0.9rem; color: #fff;">TicketAdda currently charges <strong>Zero Commission</strong> for all users. No service fees!</span>
                 </div>
-                <div class="hero-cta-group">
-                    <a href="#tickets-section" class="btn btn-primary btn-xxl"><i class="fas fa-ticket-alt"></i> GET FOR FREE / CONTACT SELLER</a>
+                <div class="col-md-6 text-md-right text-center">
+                    <a href="#tickets-section" class="btn btn-primary btn-xxl"><i class="fas fa-ticket-alt"></i> CONTACT SELLER / BUY TICKET</a>
                     <a href="<?php echo esc_url(home_url('/sell-ticket/?event_id=' . $event_id)); ?>" class="btn btn-glass btn-xxl"><i class="fas fa-plus"></i> SELL TICKETS</a>
                 </div>
             </div>

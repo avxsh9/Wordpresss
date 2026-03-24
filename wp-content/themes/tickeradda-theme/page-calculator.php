@@ -40,7 +40,7 @@ get_header();
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 15px; background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 8px; border: 1px dashed #10b981;">
                         <span style="color: #10b981; font-weight: 600; font-size: 0.9rem;">Platform Fee (0%)</span>
-                        <span style="color: #10b981; font-weight: 700;">FREE</span>
+                        <span style="color: #10b981; font-weight: 700;">₹0</span>
                     </div>
                     <div style="border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;"></div>
                     <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -48,7 +48,7 @@ get_header();
                         <span style="font-size: 1.8rem; font-weight: 700; color: #10b981;" id="netPayout">₹0</span>
                     </div>
                     <div style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: #10b981;">
-                        TicketAdda doesn't take any commission; it's free to use right now! Enjoy.
+                        TicketAdda doesn't take any commission; zero fees applied right now! Enjoy.
                     </div>
                 </div>
                 <div style="text-align: center; margin-top: 30px;">
@@ -74,7 +74,7 @@ get_header();
                 const price = parseFloat(priceInput.value) || 0;
                 const qty = parseFloat(qtyInput.value) || 1;
                 const total = price * qty;
-                const fee = 0; // FREE
+                const fee = 0; // ZERO COMMISSION
                 const payout = total;
                 totalSalesEl.textContent = `₹${total.toLocaleString()}`;
                 netPayoutEl.textContent = `₹${payout.toLocaleString()}`;
