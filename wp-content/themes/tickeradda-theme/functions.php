@@ -256,7 +256,10 @@ add_filter( 'template_include', function( $template ) {
         'sports'  => 'page-sports.php',
         'theatre' => 'page-theatre.php',
         'play'    => 'page-play.php',
+        'debug-slug'   => 'debug-slug.php',
+        'debug-status' => 'debug-status.php',
     );
+
 
     if ( isset( $map[ $slug ] ) ) {
         $file = get_template_directory() . '/' . $map[ $slug ];
