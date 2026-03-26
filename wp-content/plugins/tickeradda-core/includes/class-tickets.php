@@ -141,6 +141,7 @@ class TA_Tickets {
         $description = isset( $_POST['description'] )  ? sanitize_textarea_field( wp_unslash( $_POST['description'] ) ) : '';
         $agreement   = isset( $_POST['agreement'] )    ? absint( $_POST['agreement'] )                           : 0;
         $movie_lang  = isset( $_POST['movieLanguage'] )? sanitize_text_field( wp_unslash( $_POST['movieLanguage'] ) ) : '';
+        $additional_info = isset( $_POST['additionalInfo'] ) ? sanitize_textarea_field( wp_unslash( $_POST['additionalInfo'] ) ) : '';
 
         // Validate required fields with granular errors
         // Note: eventDate and eventTime are optional (e.g. movies have variable screening times)
@@ -255,14 +256,16 @@ class TA_Tickets {
             'seat_number' => $seat_number,
             'venue'       => $venue,
             'description' => $description,
-            'event_date'  => $event_date,
+            'event_date'  => $event_date ?: null,
             'event_time'  => $event_time,
             'file_url'    => $file_url,
             'file_hash'   => $file_hash,
             'payment_proof_url' => $payment_proof_url,
             'agreement_accepted'=> $agreement ? 1 : 0,
+            'movie_language'    => $movie_lang,
+            'additional_info'   => $additional_info,
             'status'      => 'pending',
-        ), array( '%d', '%s', '%s', '%d', '%f', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s' ) );
+        ), array( '%d', '%s', '%s', '%d', '%f', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s' ) );
 
         if ( ! $inserted ) {
             error_log( 'TickerAdda DB Error: ' . $wpdb->last_error );
@@ -386,8 +389,23 @@ class TA_Tickets {
         $table   = TA_Database::tickets_table();
         $orders  = TA_Database::orders_table();
 
+        // Suppress DB errors so missing columns don't throw fatal output
+        $wpdb->suppress_errors( true );
+
+        // Check if new columns exist; if not, use COALESCE fallback
+        $cols = $wpdb->get_col( "SHOW COLUMNS FROM `{$table}`" );
+        $has_movie_lang   = in_array( 'movie_language', $cols );
+        $has_extra_info   = in_array( 'additional_info', $cols );
+
+        $lang_sel  = $has_movie_lang ? 't.movie_language' : "'' as movie_language";
+        $info_sel  = $has_extra_info ? 't.additional_info' : "'' as additional_info";
+
         $tickets = $wpdb->get_results( $wpdb->prepare(
-            "SELECT t.*,
+            "SELECT t.id, t.event_id, t.event_name, t.type, t.seller_id, t.price, t.quantity,
+             t.section, t.row_label, t.seat_number, t.venue, t.description,
+             t.event_date, t.event_time, t.file_url, t.file_hash, t.payment_proof_url,
+             t.agreement_accepted, t.status, t.is_unlisted, t.created_at, t.updated_at,
+             {$lang_sel}, {$info_sel},
              o.buyer_id, o.id as order_id, o.total_amount as order_total, o.status as order_status,
              u.display_name as buyer_name, u.user_email as buyer_email,
              um.meta_value as buyer_phone
@@ -399,6 +417,12 @@ class TA_Tickets {
              ORDER BY t.created_at DESC",
             $user_id
         ) );
+
+        $wpdb->suppress_errors( false );
+
+        if ( $wpdb->last_error ) {
+            return new WP_Error( 'db_error', 'Database error: ' . $wpdb->last_error, array( 'status' => 500 ) );
+        }
 
         return rest_ensure_response( array_map( array( $this, 'format_ticket' ), $tickets ) );
     }
@@ -597,6 +621,14 @@ class TA_Tickets {
     // ── Format helper ─────────────────────────────────────────────────────────
     private function format_ticket( $t ) {
         if ( ! $t ) return null;
+
+        // Get movie language — from ticket column first, then post_meta fallback
+        $movie_language = ! empty( $t->movie_language ) ? $t->movie_language
+            : ( ! empty( $t->event_id ) ? get_post_meta( (int) $t->event_id, 'movieLanguage', true ) : '' );
+        if ( ! $movie_language && ! empty( $t->event_id ) ) {
+            $movie_language = get_post_meta( (int) $t->event_id, 'language', true );
+        }
+
         return array(
             '_id'            => (int) $t->id,
             'id'             => (int) $t->id,
@@ -622,6 +654,8 @@ class TA_Tickets {
             'category'       => esc_html( $t->section ?? '' ),
             'venue'          => esc_html( $t->venue ?? '' ),
             'description'    => esc_html( $t->description ?? '' ),
+            'additionalInfo' => esc_html( $t->additional_info ?? '' ),
+            'movieLanguage'  => esc_html( $movie_language ),
             'date'           => $t->event_date,
             'eventDate'      => $t->event_date,
             'eventTime'      => $t->event_time,

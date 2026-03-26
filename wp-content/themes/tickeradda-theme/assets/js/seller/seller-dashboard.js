@@ -13,10 +13,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         const res = await fetch(TA.restUrl + '/tickets/my-tickets', {
             headers: { 'X-WP-Nonce': TA.nonce }
         });
+
+        // Handle HTTP-level errors (4xx/5xx)
+        if (!res.ok) {
+            let errMsg = 'Server error (' + res.status + ')';
+            try {
+                const errData = await res.json();
+                errMsg = errData.message || errMsg;
+            } catch(e) {}
+            throw new Error(errMsg);
+        }
+
         const tickets = await res.json();
 
-        if (!Array.isArray(tickets) || tickets.length === 0) {
+        // Handle WP_Error response (object instead of array)
+        if (!Array.isArray(tickets)) {
+            if (tickets && tickets.message) throw new Error(tickets.message);
             tableBody.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center; color: var(--text-gray);">No listings found.</td></tr>';
+            return;
+        }
+
+        if (tickets.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center; color: var(--text-gray);">No listings found. <a href="' + TA.homeUrl + 'sell-ticket/" style="color:var(--primary);">List your first ticket →</a></td></tr>';
             return;
         }
 
@@ -104,8 +122,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (ticketsSoldEl) ticketsSoldEl.innerText = soldCount;
 
     } catch (err) {
-        console.error(err);
-        if (tableBody) tableBody.innerHTML = '<tr><td colspan="6" style="color:red; text-align:center;">Error loading data.</td></tr>';
+        console.error('Seller dashboard error:', err);
+        if (tableBody) {
+            tableBody.innerHTML = `<tr><td colspan="6" style="padding:20px; text-align:center;">
+                <div style="color:#ef4444; margin-bottom:8px;"><i class="fas fa-exclamation-circle"></i> Error loading listings</div>
+                <div style="color:#888; font-size:0.85rem;">${err.message || 'Please try refreshing the page.'}</div>
+                <button onclick="location.reload()" style="margin-top:12px; padding:8px 16px; background:var(--primary); color:#fff; border:none; border-radius:8px; cursor:pointer;">Retry</button>
+            </td></tr>`;
+        }
     }
 });
 

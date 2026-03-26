@@ -288,3 +288,168 @@ add_filter( 'rest_authentication_errors', function( $result ) {
 // ── Performance: Remove unused WP head items ──────────────────────────────────
 remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
 remove_action( 'wp_print_styles', 'print_emoji_styles' );
+
+// Mobile Responsive CSS — injected inline to bypass file caching/sync issues
+add_action( 'wp_head', function() {
+    if ( is_admin() ) return;
+    ?>
+<style id="ta-mobile-responsive">
+@media (max-width: 768px) {
+    html, body { overflow-x: hidden !important; width: 100% !important; }
+    .container { width: 100% !important; max-width: 100% !important; padding-left: 12px !important; padding-right: 12px !important; box-sizing: border-box !important; }
+    .logo img, .site-logo img, .nav-logo img { height: 32px !important; width: auto !important; max-width: 120px !important; }
+
+    /* Hero */
+    .hero { min-height: auto !important; padding: 90px 0 30px !important; }
+    .hero-content { width: 100% !important; max-width: 100% !important; padding: 0 12px !important; text-align: center !important; }
+    .hero h1, .hero-title { font-size: clamp(22px, 7vw, 34px) !important; line-height: 1.2 !important; margin-bottom: 10px !important; }
+    .hero p, .hero-subtitle { font-size: 13px !important; line-height: 1.5 !important; margin-bottom: 16px !important; }
+
+    /* Search */
+    .search-container { width: 100% !important; max-width: 100% !important; margin: 12px 0 !important; position: relative !important; }
+    .search-container input { width: 100% !important; padding: 12px 100px 12px 16px !important; border-radius: 30px !important; font-size: 14px !important; box-sizing: border-box !important; }
+    .search-container button { position: absolute !important; right: 5px !important; top: 5px !important; width: auto !important; padding: 8px 14px !important; border-radius: 25px !important; font-size: 12px !important; height: calc(100% - 10px) !important; }
+
+    /* Category pills */
+    .hero-categories, .category-tabs, .filter-tabs { display: flex !important; flex-wrap: nowrap !important; overflow-x: auto !important; gap: 8px !important; justify-content: flex-start !important; margin-top: 12px !important; scrollbar-width: none !important; -webkit-overflow-scrolling: touch !important; }
+    .hero-categories::-webkit-scrollbar { display: none !important; }
+    .category-pill, .category-pill-small { flex: 0 0 auto !important; white-space: nowrap !important; padding: 6px 14px !important; font-size: 12px !important; }
+
+    /* Sections */
+    .section { padding: 24px 0 !important; }
+    .section-header { display: flex !important; flex-wrap: wrap !important; align-items: center !important; justify-content: space-between !important; gap: 8px !important; margin-bottom: 14px !important; }
+    .section-title h2 { font-size: 18px !important; margin-bottom: 2px !important; }
+    .section-title p { font-size: 12px !important; margin: 0 !important; }
+
+    /* 2-Column Grid — stretch so equal row heights */
+    .grid-4, .grid-3, .grid-2 { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; align-items: stretch !important; }
+
+    /* ── CARD: FLEX COLUMN, FULL HEIGHT, BUTTONS PINNED ── */
+    .event-card-premium { min-height: 0 !important; height: 100% !important; border-radius: 14px !important; display: flex !important; flex-direction: column !important; overflow: hidden !important; }
+    .movie-card { min-height: 0 !important; height: 100% !important; }
+
+    /* Image */
+    .event-card-image { height: auto !important; aspect-ratio: 2/3 !important; overflow: hidden !important; flex-shrink: 0 !important; }
+    .event-card-image img { width: 100% !important; height: 100% !important; object-fit: cover !important; }
+
+    /* Details flex grow */
+    .event-card-details { padding: 8px 10px 4px !important; flex: 1 1 auto !important; display: flex !important; flex-direction: column !important; gap: 3px !important; }
+
+    /* Title: clamp to 2 lines → uniform height across cards in same row */
+    .movie-title, .event-card-title { font-size: 11px !important; overflow: hidden !important; display: -webkit-box !important; -webkit-line-clamp: 2 !important; -webkit-box-orient: vertical !important; -webkit-text-fill-color: #fff !important; margin-bottom: 2px !important; line-height: 1.3 !important; }
+
+    /* Meta */
+    .event-card-meta { margin-top: auto !important; gap: 3px !important; }
+    .event-card-meta span { font-size: 10px !important; }
+
+    /* Buttons: row, pinned */
+    .event-card-premium .event-card-actions,
+    .movie-card .event-card-actions,
+    .event-card-actions { padding: 6px 8px 10px !important; display: flex !important; flex-direction: row !important; gap: 6px !important; flex-shrink: 0 !important; }
+    .card-btn-primary { flex: 1 !important; width: auto !important; min-width: 0 !important; padding: 8px 4px !important; font-size: 9px !important; border-radius: 8px !important; text-align: center !important; }
+    .card-btn-secondary { flex: 1 !important; width: auto !important; min-width: 0 !important; padding: 7px 4px !important; font-size: 9px !important; border-radius: 8px !important; justify-content: center !important; }
+
+    /* Navigation */
+    .navbar { padding: 10px 0 !important; }
+    .menu-toggle { display: block !important; }
+    .nav-links { position: absolute !important; top: 100% !important; left: 0 !important; width: 100% !important; background: rgba(5,5,5,0.97) !important; backdrop-filter: blur(20px) !important; flex-direction: column !important; padding: 16px !important; display: none !important; z-index: 999 !important; gap: 8px !important; }
+    .nav-links.active { display: flex !important; }
+    .nav-link { font-size: 15px !important; padding: 10px 0 !important; text-align: center !important; }
+    .banner-content { flex-direction: column !important; gap: 6px !important; text-align: center !important; padding: 6px 12px !important; font-size: 12px !important; }
+
+    /* Footer — full rework for mobile */
+    .footer { padding: 30px 0 16px !important; }
+    /* Main footer grid: brand full-width on top, then links in 2 columns */
+    .footer-grid, .site-footer .footer-grid, .footer-content {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 20px 16px !important;
+    }
+    /* Brand/logo spans full width */
+    .footer-brand, .footer-about {
+        grid-column: 1 / -1 !important;
+        text-align: center !important;
+        margin-bottom: 8px !important;
+    }
+    .footer-brand img, .site-footer .footer-logo { height: 30px !important; width: auto !important; }
+    .footer-brand p { font-size: 12px !important; margin-top: 6px !important; color: rgba(255,255,255,0.6) !important; }
+    /* Column headings */
+    .footer-col h4, .footer-col h3 { font-size: 12px !important; font-weight: 700 !important; margin-bottom: 10px !important; letter-spacing: 0.03em !important; color: #fff !important; }
+    /* Column links */
+    .footer-col ul { padding: 0 !important; margin: 0 !important; list-style: none !important; }
+    .footer-col ul li { margin-bottom: 8px !important; }
+    .footer-col ul li a { font-size: 12px !important; color: rgba(255,255,255,0.65) !important; text-decoration: none !important; }
+    /* Social icons row */
+    .footer-social, .social-links { display: flex !important; flex-wrap: wrap !important; gap: 10px !important; justify-content: center !important; margin-top: 6px !important; }
+    /* Bottom bar */
+    .footer-bottom, .site-footer .footer-bottom { text-align: center !important; font-size: 11px !important; padding-top: 16px !important; margin-top: 16px !important; border-top: 1px solid rgba(255,255,255,0.08) !important; }
+
+    /* Sidebars */
+    .movies-page-container, .sports-page-container, .theatre-page-container { flex-direction: column !important; display: flex !important; }
+    .movies-sidebar, .sports-sidebar, .theatre-sidebar { width: 100% !important; position: static !important; margin-bottom: 16px !important; }
+
+    /* Tables */
+    .table-container { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
+
+    /* ── HOME: "Your Safety" trust section — 3 cards, 1 column on mobile (no orphan gap) ── */
+    .trust-section .grid-3,
+    .trust-section .grid.grid-3 { grid-template-columns: 1fr !important; gap: 12px !important; }
+    .feature-box.card, .feature-box {
+        padding: 18px 16px !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 14px !important;
+        text-align: left !important;
+        border-radius: 12px !important;
+    }
+    /* Icon container: fixed circle so SVG/icon stays contained */
+    .feature-box .feature-icon,
+    .feature-box > svg,
+    .feature-box > i,
+    .feature-box > .icon,
+    .feature-box > img[src*="svg"],
+    .feature-box > div:first-child {
+        flex-shrink: 0 !important;
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        border-radius: 50% !important;
+        background: rgba(59,130,246,0.12) !important;
+        display: flex !important; align-items: center !important; justify-content: center !important;
+        overflow: hidden !important;
+        font-size: 20px !important;
+        margin-bottom: 0 !important;
+    }
+    .feature-box > div:first-child svg,
+    .feature-box .feature-icon svg { width: 22px !important; height: 22px !important; flex-shrink: 0 !important; }
+    .feature-box h3, .feature-box h4 { font-size: 14px !important; margin: 0 0 4px !important; }
+    .feature-box p { font-size: 12px !important; margin: 0 !important; line-height: 1.4 !important; }
+    .feature-box > div:last-child { flex: 1 !important; }
+
+    /* ── EVENT/MOVIE DETAIL PAGE: Hero & CTAs ── */
+    .event-hero-premium { padding: 90px 0 40px !important; min-height: auto !important; }
+    .hero-info-bar { gap: 10px !important; flex-wrap: wrap !important; }
+    .info-item { min-width: 70px !important; }
+    .hero-title-main { font-size: clamp(20px, 6.5vw, 36px) !important; }
+    .col-md-6 { display: flex !important; flex-direction: column !important; gap: 10px !important; width: 100% !important; }
+    .col-md-6 .btn, .col-md-6 .btn-xxl { width: 100% !important; justify-content: center !important; font-size: 14px !important; padding: 13px 16px !important; box-sizing: border-box !important; }
+    .event-grid-layout { grid-template-columns: 1fr !important; }
+    .details-column { display: none !important; }
+
+    /* ── TICKET LISTING CARDS ── */
+    .ticket-listing-card { grid-template-columns: 1fr !important; gap: 10px !important; }
+    .ticket-cta { border-left: none !important; padding-left: 0 !important; border-top: 1px solid rgba(255,255,255,0.05) !important; padding-top: 10px !important; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; gap: 8px !important; flex-wrap: wrap !important; }
+}
+</style>
+    <?php
+}, 5 );
+
+// Final Responsive Overrides — ensures 2-column layout and professional look
+add_action( 'wp_enqueue_scripts', function() {
+    $css_path = get_template_directory() . '/assets/css/responsive-addon.css';
+    $v = file_exists( $css_path ) ? filemtime( $css_path ) : '2.1.0';
+    wp_enqueue_style( 'ta-responsive-addon', get_template_directory_uri() . '/assets/css/responsive-addon.css', array( 'ta-main', 'ta-responsive' ), $v );
+}, 999 );
+
+

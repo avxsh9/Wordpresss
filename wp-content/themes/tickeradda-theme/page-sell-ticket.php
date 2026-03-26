@@ -57,31 +57,31 @@ get_header();
                     <div style="margin-bottom: 25px;">
                         <label style="display: block; color: var(--text-gray); margin-bottom: 10px;">Event
                             Category</label>
-                        <select id="ticketCategory" name="category" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: white; appearance: none;">
-                            <option value="movies">Movies</option>
-                            <option value="music">Music / Concert</option>
-                            <option value="sports">Sports / Matches</option>
-                            <option value="comedy">Standup Comedy</option>
-                            <option value="theatre">Theatre / Plays</option>
-                            <option value="other">Other Events</option>
+                        <select id="ticketCategory" name="category" style="width: 100%; padding: 12px; background: #1e293b; border: 1px solid var(--glass-border); border-radius: 8px; color: white; appearance: none; -webkit-appearance: none;">
+                            <option value="movies" style="background:#1e293b; color:white;">Movies</option>
+                            <option value="music" style="background:#1e293b; color:white;">Music / Concert</option>
+                            <option value="sports" style="background:#1e293b; color:white;">Sports / Matches</option>
+                            <option value="comedy" style="background:#1e293b; color:white;">Standup Comedy</option>
+                            <option value="theatre" style="background:#1e293b; color:white;">Theatre / Plays</option>
+                            <option value="other" style="background:#1e293b; color:white;">Other Events</option>
                         </select>
                     </div>
 
                     <div id="movieLanguageContainer" style="margin-bottom: 25px; display: none;">
                         <label style="display: block; color: var(--text-gray); margin-bottom: 10px;">Language (For Movies Only)</label>
-                        <select id="ticketLanguage" name="movieLanguage" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: white; appearance: none;">
-                            <option value="">-- Select Language --</option>
-                            <option value="Hindi">Hindi</option>
-                            <option value="English">English</option>
-                            <option value="Tamil">Tamil</option>
-                            <option value="Telugu">Telugu</option>
-                            <option value="Kannada">Kannada</option>
-                            <option value="Malayalam">Malayalam</option>
-                            <option value="Marathi">Marathi</option>
-                            <option value="Bengali">Bengali</option>
-                            <option value="Punjabi">Punjabi</option>
-                            <option value="Gujarati">Gujarati</option>
-                            <option value="Other">Other</option>
+                        <select id="ticketLanguage" name="movieLanguage" style="width: 100%; padding: 12px; background: #1e293b; border: 1px solid var(--glass-border); border-radius: 8px; color: white; appearance: none; -webkit-appearance: none;">
+                            <option value="" style="background:#1e293b; color:white;">-- Select Language --</option>
+                            <option value="Hindi" style="background:#1e293b; color:white;">Hindi</option>
+                            <option value="English" style="background:#1e293b; color:white;">English</option>
+                            <option value="Tamil" style="background:#1e293b; color:white;">Tamil</option>
+                            <option value="Telugu" style="background:#1e293b; color:white;">Telugu</option>
+                            <option value="Kannada" style="background:#1e293b; color:white;">Kannada</option>
+                            <option value="Malayalam" style="background:#1e293b; color:white;">Malayalam</option>
+                            <option value="Marathi" style="background:#1e293b; color:white;">Marathi</option>
+                            <option value="Bengali" style="background:#1e293b; color:white;">Bengali</option>
+                            <option value="Punjabi" style="background:#1e293b; color:white;">Punjabi</option>
+                            <option value="Gujarati" style="background:#1e293b; color:white;">Gujarati</option>
+                            <option value="Other" style="background:#1e293b; color:white;">Other</option>
                         </select>
                     </div>
                     <div style="margin-bottom: 25px;">
@@ -91,8 +91,8 @@ get_header();
                     </div>
                     <div class="grid grid-3" style="margin-bottom: 25px;">
                         <div>
-                            <label style="display: block; color: var(--text-gray); margin-bottom: 10px;">Ticket Section</label>
-                            <input type="text" id="ticketSection" placeholder="e.g. Diamond"
+                            <label style="display: block; color: var(--text-gray); margin-bottom: 10px;">Seat Category <span style="font-size:0.8em; color:#888;">(Optional)</span></label>
+                            <input type="text" id="ticketSection" placeholder="e.g. Diamond, Platinum, Gold"
                                 style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: white;">
                         </div>
                         <div>
@@ -134,6 +134,13 @@ get_header();
                                 style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: white;">
                         </div>
                     </div>
+                    <!-- Additional Info Field -->
+                    <div style="margin-bottom: 25px;">
+                        <label style="display: block; color: var(--text-gray); margin-bottom: 6px;">Additional Information <span style="font-size:0.8em; color:#888;">(Optional — shown to buyer before purchase)</span></label>
+                        <textarea id="ticketAdditionalInfo" name="additionalInfo" rows="3" placeholder="e.g. Tickets are in PDF format. OTP will be shared on WhatsApp. Row B seats 12-13. Screen 4."
+                            style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: white; resize: vertical; font-family: inherit; font-size: 0.95rem;"></textarea>
+                    </div>
+
                     <div id="proofDropZone"
                         style="margin-bottom: 25px; padding: 30px; border: 2px dashed var(--glass-border); border-radius: 10px; text-align: center; cursor: pointer; transition: 0.3s; background: rgba(16, 185, 129, 0.05);">
                         <input type="file" id="paymentProofFile" hidden accept=".pdf,.jpg,.jpeg,.png">

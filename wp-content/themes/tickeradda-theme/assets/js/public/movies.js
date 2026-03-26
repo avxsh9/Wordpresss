@@ -231,6 +231,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             const tickets = event.ticketCount > 0
                 ? `<span style="color:#10b981;font-size:0.82rem;"><i class="fas fa-ticket-alt"></i> ${event.ticketCount} available</span>` : '';
 
+            // Ratings row — cert badge + IMDB star if available
+            const imdbBadge = rating
+                ? `<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);border-radius:6px;padding:2px 6px;font-size:10px;font-weight:700;color:#f59e0b;"><i class="fas fa-star"></i> ${rating}</span>`
+                : '';
+            const certBadge = `<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);border-radius:6px;padding:2px 6px;font-size:10px;font-weight:700;color:#93c5fd;">${cert}</span>`;
+            const langBadge = lang
+                ? `<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:2px 6px;font-size:10px;color:#e2e8f0;">${lang}</span>`
+                : '';
+
             return `
                 <div class="event-card-premium movie-card" onclick="window.location.href='${event.url}'">
                     <div class="event-card-image">
@@ -241,10 +250,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                     <div class="event-card-details">
                         <h3 class="event-card-title movie-title">${event.name}</h3>
+                        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px;">
+                            ${certBadge}${imdbBadge}${langBadge}
+                        </div>
                         <div class="event-card-meta">
-                            <span><i class="fas fa-shield-alt" style="color:var(--primary);"></i> ${cert}</span>
-                            ${lang ? `<span><i class="fas fa-language" style="color:var(--primary);"></i> ${lang}</span>` : ''}
-                            ${rating ? `<span><i class="fas fa-star" style="color:#f59e0b;"></i> ${rating}</span>` : ''}
                             ${tickets}
                         </div>
                     </div>

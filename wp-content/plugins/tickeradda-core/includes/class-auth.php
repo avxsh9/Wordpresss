@@ -218,7 +218,7 @@ class TA_Auth {
         }
 
         // Validate Audience (Client ID)
-        $client_id = "539426267370-e12lt552ilkencgo97qcaf01kl4mpt26.apps.googleusercontent.com";
+        $client_id = "514881348157-gdmere7d3ebcaj7i94m83jqklmkan1kf.apps.googleusercontent.com";
         if ( $data['aud'] !== $client_id ) {
              return new WP_Error( 'invalid_aud', 'Invalid client ID.', array( 'status' => 401 ) );
         }

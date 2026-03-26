@@ -70,12 +70,13 @@ get_header();
                         </div>
                         <div>
                             <h4 id="sellerName" style="margin: 0; font-size: 1.1rem; color: #fff;">Seller Name</h4>
-
                         </div>
                         <div style="margin-left: auto;">
                             <span class="badge badge-success"><i class="fas fa-check-circle"></i> Verified</span>
                         </div>
                     </div>
+                    <!-- Language tag + Additional Info: shown if set by seller -->
+                    <div id="ticketExtraInfo" style="display:none; margin-bottom: 20px;"></div>
                     <div
                         style="display: flex; gap: 10px; align-items: center; padding: 15px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.2);">
                         <i class="fas fa-shield-alt" style="color: var(--primary); font-size: 1.2rem;"></i>

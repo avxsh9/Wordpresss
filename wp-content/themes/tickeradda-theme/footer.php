@@ -2,19 +2,17 @@
 <footer class="footer">
     <div class="container">
         <div class="footer-content">
-            <div class="footer-brand">
-                <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="logo">
+            <div class="footer-brand" style="text-align:center;">
+                <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="logo" style="display:inline-block;">
                     <img src="<?php echo esc_url( get_template_directory_uri() . '/public/images/logo.png' ); ?>" alt="TickerAdda" style="height: 50px;">
                 </a>
-                <p>India's safest ticket marketplace. Buy and sell with 100% confidence.</p>
+                <p style="text-align:center;">India's safest ticket marketplace. Buy and sell with 100% confidence.</p>
             </div>
             <div class="footer-col">
                 <h4>Discover</h4>
                 <ul>
                     <li><a href="<?php echo esc_url( home_url( '/events/' ) ); ?>">All Events</a></li>
                     <li><a href="<?php echo esc_url( home_url( '/about/' ) ); ?>">About Us</a></li>
-                    <li><a href="#">Trending</a></li>
-                    <li><a href="<?php echo esc_url( home_url( '/careers/' ) ); ?>">Careers</a></li>
                 </ul>
             </div>
             <div class="footer-col">
@@ -24,7 +22,6 @@
                     <li><a href="<?php echo esc_url( home_url( '/events/?category=sports' ) ); ?>">Sports</a></li>
                     <li><a href="<?php echo esc_url( home_url( '/events/?category=comedy' ) ); ?>">Comedy</a></li>
                     <li><a href="<?php echo esc_url( home_url( '/events/?category=theatre' ) ); ?>">Theatre</a></li>
-                    <li><a href="<?php echo esc_url( home_url( '/events/?category=workshops' ) ); ?>">Workshops</a></li>
                 </ul>
             </div>
             <div class="footer-col">
@@ -35,8 +32,6 @@
                     <li><a href="<?php echo esc_url( home_url( '/contact/' ) ); ?>">Contact Us</a></li>
                     <li><a href="<?php echo esc_url( home_url( '/terms/' ) ); ?>">Terms</a></li>
                     <li><a href="<?php echo esc_url( home_url( '/privacy/' ) ); ?>">Privacy</a></li>
-                    <li><a href="<?php echo esc_url( home_url( '/refund-policy/' ) ); ?>">Refunds</a></li>
-                    <li><a href="<?php echo esc_url( home_url( '/aadhaar-compliance/' ) ); ?>">Aadhaar KYC</a></li>
                 </ul>
             </div>
             <div class="footer-col">

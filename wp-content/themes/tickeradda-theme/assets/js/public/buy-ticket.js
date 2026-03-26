@@ -40,9 +40,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const sInitialsEl = document.getElementById('sellerInitials');
                 const initials = (ticket.seller.name || 'V').split(' ').map(n => n[0]).join('').toUpperCase();
                 if (sInitialsEl) sInitialsEl.textContent = initials.substring(0, 2);
-                
-
             }
+
+            // Show movie language + additional info to buyer
+            const extraInfoDiv = document.getElementById('ticketExtraInfo');
+            if (extraInfoDiv) {
+                let extraHtml = '';
+                if (ticket.movieLanguage) {
+                    extraHtml += `<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:#93c5fd;padding:5px 12px;border-radius:20px;font-size:0.8rem;font-weight:600;margin-bottom:10px;"><i class="fas fa-language"></i> Language: ${ticket.movieLanguage}</span>`;
+                }
+                if (ticket.additionalInfo) {
+                    extraHtml += `<div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:12px 16px;"><p style="margin:0 0 4px;font-weight:700;color:#fcd34d;font-size:0.85rem;"><i class="fas fa-info-circle"></i> Seller Note (read before contacting)</p><p style="margin:0;color:#e2e8f0;font-size:0.9rem;line-height:1.5;">${ticket.additionalInfo}</p></div>`;
+                }
+                if (extraHtml) {
+                    extraInfoDiv.innerHTML = extraHtml;
+                    extraInfoDiv.style.display = 'block';
+                }
+            }
+
             
             setupPayment(ticket);
         } else {

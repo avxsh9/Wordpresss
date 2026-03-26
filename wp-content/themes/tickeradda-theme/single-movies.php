@@ -3,51 +3,79 @@
 <main id="main">
     <?php if (have_posts()) : while (have_posts()) : the_post(); 
         $event_id = get_the_ID();
-        $date = get_post_meta($event_id, 'event_date', true); // Movies might use generic date or movie_date if added
+        $date = get_post_meta($event_id, 'event_date', true);
         $time = get_post_meta($event_id, 'event_time', true);
         $location = get_post_meta($event_id, 'venue', true);
         $image = get_post_meta($event_id, 'poster_url', true) ?: get_the_post_thumbnail_url($event_id, 'full');
         if (!$image) $image = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80';
+        $movie_cert   = get_post_meta($event_id, 'movieCert', true) ?: get_post_meta($event_id, 'certificate', true) ?: 'UA';
+        $movie_rating = get_post_meta($event_id, 'movieRating', true) ?: get_post_meta($event_id, 'imdb_rating', true) ?: '';
+        $movie_lang   = get_post_meta($event_id, 'movieLanguage', true) ?: get_post_meta($event_id, 'language', true) ?: '';
     ?>
     
     <!-- Event Hero -->
-    <section class="event-hero-premium" style="background: linear-gradient(to bottom, rgba(5,5,5,0.3) 0%, rgba(5,5,5,0.95) 100%), url('<?php echo esc_url($image); ?>');">
+    <style>
+    @media (max-width: 768px) {
+        .hero-info-bar { gap: 12px !important; flex-wrap: wrap !important; }
+        .hero-title-main { font-size: clamp(24px, 8vw, 42px) !important; }
+        .col-md-6 { display: flex !important; flex-direction: column !important; gap: 10px !important; width: 100% !important; }
+        .col-md-6 .btn { width: 100% !important; justify-content: center !important; font-size: 14px !important; padding: 12px 16px !important; }
+        .event-hero-premium { padding: 100px 0 50px !important; }
+        .hero-inner { width: 100% !important; }
+    }
+    </style>
+    <section class="event-hero-premium" style="background: linear-gradient(to bottom, rgba(5,5,5,0.3) 0%, rgba(5,5,5,0.95) 100%), url('<?php echo esc_url($image); ?>')">
         <div class="container">
             <div class="hero-inner">
                 <div class="hero-meta-top">
                     <span class="premium-badge">
                         <?php 
                         $terms = wp_get_post_terms($event_id, 'event_cat');
-                        echo !empty($terms) ? esc_html($terms[0]->name) : 'Event';
+                        echo !empty($terms) ? esc_html($terms[0]->name) : 'Movie';
                         ?>
                     </span>
                 </div>
                 <h1 class="hero-title-main"><?php the_title(); ?></h1>
                 
                 <div class="hero-info-bar">
+                    <!-- Certificate Badge -->
                     <div class="info-item">
-                        <i class="far fa-calendar-alt"></i>
+                        <i class="fas fa-shield-alt"></i>
                         <div class="info-text">
-                            <span class="info-label">Date</span>
-                            <span class="info-value"><?php echo esc_html($date ? date('F j, Y', strtotime($date)) : 'Date TBD'); ?></span>
+                            <span class="info-label">Certificate</span>
+                            <span class="info-value"><?php echo esc_html($movie_cert); ?></span>
                         </div>
                     </div>
-                    <?php if ($time) : ?>
+                    <?php if ($movie_rating) : ?>
+                    <!-- IMDB Rating -->
                     <div class="info-item">
-                        <i class="far fa-clock"></i>
+                        <i class="fas fa-star" style="color:#f59e0b;"></i>
                         <div class="info-text">
-                            <span class="info-label">Time</span>
-                            <span class="info-value"><?php echo esc_html(date('h:i A', strtotime($time))); ?></span>
+                            <span class="info-label">IMDB Rating</span>
+                            <span class="info-value" style="color:#f59e0b;font-weight:800;"><?php echo esc_html($movie_rating); ?></span>
                         </div>
                     </div>
                     <?php endif; ?>
+                    <?php if ($movie_lang) : ?>
+                    <!-- Language -->
+                    <div class="info-item">
+                        <i class="fas fa-language"></i>
+                        <div class="info-text">
+                            <span class="info-label">Language</span>
+                            <span class="info-value"><?php echo esc_html($movie_lang); ?></span>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                    <?php if ($location) : ?>
+                    <!-- Venue -->
                     <div class="info-item">
                         <i class="fas fa-map-marker-alt"></i>
                         <div class="info-text">
                             <span class="info-label">Venue</span>
-                            <span class="info-value"><?php echo esc_html($location ?: 'Venue TBD'); ?></span>
+                            <span class="info-value"><?php echo esc_html($location); ?></span>
                         </div>
                     </div>
+                    <?php endif; ?>
                 </div>
 
                 <div style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 12px 20px; margin-bottom: 25px; display: inline-flex; align-items: center; gap: 12px;">

@@ -23,7 +23,7 @@ get_header();
                         <div style="flex: 1;">
                             <label style="display: block; color: var(--text-gray); margin-bottom: 8px;">Ticket Price
                                 (₹)</label>
-                            <input type="number" id="calcPrice" placeholder="0"
+                            <input type="number" id="calcPrice" placeholder="0" min="0" max="1000000"
                                 style="width: 100%; padding: 15px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 12px; color: white; font-size: 1.2rem; font-weight: 600;">
                         </div>
                         <div style="width: 100px;">
@@ -68,16 +68,38 @@ get_header();
             const priceInput = document.getElementById('calcPrice');
             const qtyInput = document.getElementById('calcQty');
             const totalSalesEl = document.getElementById('totalSales');
-            const platformFeeEl = document.getElementById('platformFee');
             const netPayoutEl = document.getElementById('netPayout');
+            const MAX_TOTAL = 1000000; // ₹10 Lakh limit
+
+            // Error message element
+            let errEl = document.getElementById('calcError');
+            if (!errEl) {
+                errEl = document.createElement('div');
+                errEl.id = 'calcError';
+                errEl.style.cssText = 'display:none; color:#ef4444; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:10px 14px; margin-top:12px; font-size:0.9rem; text-align:center;';
+                errEl.textContent = '⚠️ Maximum limit is ₹10,00,000 (10 Lakh). Please enter a lower amount.';
+                document.getElementById('calcPrice').closest('div[style*="margin-bottom: 30px"]').appendChild(errEl);
+            }
+
             function calculate() {
                 const price = parseFloat(priceInput.value) || 0;
-                const qty = parseFloat(qtyInput.value) || 1;
+                const qty   = Math.max(1, parseFloat(qtyInput.value) || 1);
                 const total = price * qty;
-                const fee = 0; // ZERO COMMISSION
+
+                if (total > MAX_TOTAL) {
+                    errEl.style.display = 'block';
+                    priceInput.style.borderColor = '#ef4444';
+                    totalSalesEl.textContent = '—';
+                    netPayoutEl.textContent   = '—';
+                    return;
+                }
+
+                errEl.style.display = 'none';
+                priceInput.style.borderColor = '';
+                const fee    = 0; // ZERO COMMISSION
                 const payout = total;
-                totalSalesEl.textContent = `₹${total.toLocaleString()}`;
-                netPayoutEl.textContent = `₹${payout.toLocaleString()}`;
+                totalSalesEl.textContent = `₹${total.toLocaleString('en-IN')}`;
+                netPayoutEl.textContent  = `₹${payout.toLocaleString('en-IN')}`;
             }
             priceInput.addEventListener('input', calculate);
             qtyInput.addEventListener('input', calculate);

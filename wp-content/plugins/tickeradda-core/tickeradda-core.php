@@ -61,6 +61,23 @@ add_action('init', function() {
     }
 });
 
+// ─── DB Migration v2.1: Add movie_language and additional_info columns ─────────
+add_action('init', function() {
+    if (!get_option('ta_db_update_v21_lang_info')) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'ta_tickets';
+        $wpdb->suppress_errors(true);
+        $wpdb->query("ALTER TABLE `{$table}` ADD COLUMN `movie_language` VARCHAR(100) DEFAULT NULL AFTER `agreement_accepted`");
+        $wpdb->query("ALTER TABLE `{$table}` ADD COLUMN `additional_info` TEXT DEFAULT NULL AFTER `movie_language`");
+        // Also make event_date nullable since movies don't always have fixed screening dates
+        $wpdb->query("ALTER TABLE `{$table}` MODIFY COLUMN `event_date` DATE DEFAULT NULL");
+        $wpdb->query("ALTER TABLE `{$table}` MODIFY COLUMN `event_time` VARCHAR(10) DEFAULT NULL");
+        $wpdb->suppress_errors(false);
+        update_option('ta_db_update_v21_lang_info', 1);
+    }
+});
+
+
 function tickeradda_init() {
     // Initialize core components globally for hooks/CPTs
     $GLOBALS['ta_security'] = new TA_Security();
